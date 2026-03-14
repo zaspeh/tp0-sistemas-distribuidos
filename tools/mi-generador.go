@@ -29,16 +29,16 @@ func main() {
 
 // escribo la definición del servidor
 func writeServer(file *os.File) {
-	fmt.Fprintln(file, "services:")
-	fmt.Fprintln(file, "  server:")
-	fmt.Fprintln(file, "    container_name: server")
-	fmt.Fprintln(file, "    image: server:latest")
-	fmt.Fprintln(file, "    entrypoint: python3 /main.py")
-	fmt.Fprintln(file, "    environment:")
-	fmt.Fprintln(file, "      - PYTHONUNBUFFERED=1")
-	fmt.Fprintln(file, "      - LOGGING_LEVEL=DEBUG")
-	fmt.Fprintln(file, "    networks:")
-	fmt.Fprintln(file, "      - testing_net")
+	fmt.Fprintln(file, `services:
+  server:
+    container_name: server
+    image: server:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
+    networks:
+      - testing_net`)
 }
 
 // escribo la definición de los clientes
