@@ -36,7 +36,6 @@ func writeServer(file *os.File) {
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=DEBUG
     networks:
       - testing_net
     volumes: 
@@ -54,7 +53,6 @@ func writeClients(file *os.File, numClients int) {
     entrypoint: /client
     environment:
       - CLI_ID=%d
-      - CLI_LOG_LEVEL=DEBUG
     networks:
       - testing_net
     volumes:
