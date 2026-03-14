@@ -38,7 +38,10 @@ func writeServer(file *os.File) {
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
     networks:
-      - testing_net`)
+      - testing_net
+    volumes: 
+      - ./server/config.ini:/config.ini:ro
+  `) // al añadir 'volumes: xxx' aseguro que use el config.ini dentro de la carpeta del host y no dentro del de la imagen
 }
 
 // escribo la definición de los clientes
@@ -54,6 +57,8 @@ func writeClients(file *os.File, numClients int) {
       - CLI_LOG_LEVEL=DEBUG
     networks:
       - testing_net
+	volumes:
+		- ./client/config.yaml:/config.yaml:ro
     depends_on:
       - server
 `, i, i, i)
