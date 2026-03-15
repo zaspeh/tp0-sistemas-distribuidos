@@ -87,3 +87,14 @@ func (c *Client) StartClientLoop() {
 	}
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
 }
+
+func (c *Client) Close() error {
+	if c.conn != nil {
+		err := c.conn.Close()
+		if err != nil {
+			return err
+		}
+		log.Infof("action: close_socket | result: success | client_id: %v", c.config.ID)
+	}
+	return nil
+}

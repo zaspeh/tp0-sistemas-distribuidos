@@ -2,9 +2,22 @@
 
 from configparser import ConfigParser
 from common.server import Server
+import signal
+import sys
 import logging
 import os
 
+def handle_sigterm(server):
+    logging.debug("action: shutdown_signal_received | result: success")
+
+    try:
+        server.close()
+        logging.debug("action: close_server_socket | result: success")
+    except Exception as e:
+        logging.error(f"action: close_server_socket | result: fail | error: {e}")
+
+    logging.debug("action: shutdown_server | result: success")
+    sys.exit(0)
 
 def initialize_config():
     """ Parse env variables or config file to find program config params
@@ -49,7 +62,14 @@ def main():
 
     # Initialize server and start server loop
     server = Server(port, listen_backlog)
+
+    signal.signal(
+        signal.SIGTERM,
+        lambda signum, frame: handle_sigterm(server)
+    )
+
     server.run()
+
 
 def initialize_log(logging_level):
     """
