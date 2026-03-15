@@ -12,7 +12,6 @@ def handle_sigterm(server):
 
     try:
         server.close()
-        logging.debug("action: close_server_socket | result: success")
     except Exception as e:
         logging.error(f"action: close_server_socket | result: fail | error: {e}")
 

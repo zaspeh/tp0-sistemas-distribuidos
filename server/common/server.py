@@ -9,6 +9,11 @@ class Server:
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
 
+    def close(self):
+        if self._server_socket:
+            self._server_socket.close()
+            logging.debug("action: close_server_socket | result: success")
+
     def run(self):
         """
         Dummy Server loop
