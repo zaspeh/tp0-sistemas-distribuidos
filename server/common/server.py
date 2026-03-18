@@ -9,15 +9,15 @@ class Server:
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
 
-def close(self):
-    if self._server_socket:
-        try:
-            self._server_socket.close()
-            logging.debug("action: close_server_socket | result: success")
-        except Exception as e:
-            logging.error(f"action: close_server_socket | result: fail | error: {e}")
-        finally:
-            self._server_socket = None # Evito errores por doble llamados (posibles casos futuros)
+    def close(self):
+        if self._server_socket:
+            try:
+                self._server_socket.close()
+                logging.debug("action: close_server_socket | result: success")
+            except Exception as e:
+                logging.error(f"action: close_server_socket | result: fail | error: {e}")
+            finally:
+                self._server_socket = None # Evito errores por doble llamados (posibles casos futuros)
 
     def run(self):
         """
