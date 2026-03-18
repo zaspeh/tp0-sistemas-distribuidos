@@ -69,36 +69,51 @@ func (c *Client) StartClientLoop() {
 		// envío la apuesta :)
 		err := c.SendBet()
 		if err != nil {
-			log.Errorf("action: send_message | result: fail | client_id: %v | error: %v",
+			log.Errorf(
+				"action: send_message | result: fail | client_id: %v | error: %v",
 				c.config.ID,
 				err,
 			)
 			return
 		}
 
-		_, err = bufio.NewReader(c.conn).ReadString('\n')
+		response, err := c.ReceiveConfirmation()
 		c.conn.Close()
 
 		if err != nil {
-			log.Errorf("action: receive_message | result: fail | client_id: %v | error: %v",
+			log.Errorf(
+				"action: receive_message | result: fail | client_id: %v | error: %v",
 				c.config.ID,
 				err,
 			)
 			return
 		}
 
-		bet := c.config.Bet
+		if response == "ok\n" {
+			bet := c.config.Bet
 
-		log.Infof(
-			"action: apuesta_enviada | result: success | dni: %s | numero: %s",
-			bet.DNI,
-			bet.Numero,
-		)
+			log.Infof(
+				"action: apuesta_enviada | result: success | dni: %s | numero: %s",
+				bet.DNI,
+				bet.Numero,
+			)
+		}
 
 		time.Sleep(c.config.LoopPeriod)
 	}
 
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
+}
+
+func (c *Client) ReceiveConfirmation() (string, error) {
+	reader := bufio.NewReader(c.conn)
+
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+
+	return response, nil
 }
 
 // modularizo en enviarApuesta
