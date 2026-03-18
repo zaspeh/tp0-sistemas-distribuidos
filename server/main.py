@@ -10,10 +10,7 @@ import os
 def handle_sigterm(server):
     logging.debug("action: shutdown_signal_received | result: success")
 
-    try:
-        server.close()
-    except Exception as e:
-        logging.error(f"action: close_server_socket | result: fail | error: {e}")
+    server.close()
 
     logging.debug("action: shutdown_server | result: success")
     sys.exit(0)
