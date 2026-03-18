@@ -75,7 +75,7 @@ class Server:
         return data.decode("utf-8").rstrip("\n")
     
     def __parse_bet(self, msg):
-        parts = [p.strip() for p in msg.split(";")]
+        parts = [p.strip() for p in msg.strip().split(";")]
 
         if len(parts) != 5:
             raise ValueError(f"invalid bet format: {msg}")
