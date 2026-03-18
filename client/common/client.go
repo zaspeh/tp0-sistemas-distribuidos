@@ -118,7 +118,7 @@ func (c *Client) SendBet() error {
 }
 
 func SerializeBet(b Bet) []byte {
-	msg := fmt.Sprintf("%s|%s|%s|%s|%s\n",
+	msg := fmt.Sprintf("%s;%s;%s;%s;%s\n",
 		b.Nombre,
 		b.Apellido,
 		b.DNI,
