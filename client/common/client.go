@@ -90,7 +90,12 @@ func (c *Client) StartClientLoop() {
 
 func (c *Client) Close() error {
 	if c.conn != nil {
-		_ = c.conn.Close()
+		err := c.conn.Close()
+		if err != nil {
+			log.Errorf("action: close_socket | result: fail | client_id: %v | error: %v", c.config.ID, err)
+			return err
+		}
+
 		c.conn = nil
 		log.Infof("action: close_socket | result: success | client_id: %v", c.config.ID)
 	}

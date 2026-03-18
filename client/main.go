@@ -128,11 +128,7 @@ func handleSigterm(client *common.Client) {
 
 		log.Infof("action: shutdown_signal_received | result: success | signal: SIGTERM")
 
-		if err := client.Close(); err != nil {
-			log.Errorf("action: close_client_resources | result: fail | error: %s", err)
-		} else {
-			log.Infof("action: close_client_resources | result: success")
-		}
+		client.Close()
 
 		log.Infof("action: shutdown_client | result: success")
 
