@@ -17,12 +17,22 @@ type ClientConfig struct {
 	ServerAddress string
 	LoopAmount    int
 	LoopPeriod    time.Duration
+	Bet           Bet
 }
 
 // Client Entity that encapsulates how
 type Client struct {
 	config ClientConfig
 	conn   net.Conn
+}
+
+// Información de la apuesta del cliente
+type Bet struct {
+	Nombre     string
+	Apellido   string
+	DNI        string
+	Nacimiento string
+	Numero     string
 }
 
 // NewClient Initializes a new client receiving the configuration

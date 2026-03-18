@@ -105,11 +105,21 @@ func main() {
 	// Print program config with debugging purposes
 	PrintConfig(v)
 
+	// capturo la información de la apuesta para inicializar el cliente con esta información
+	bet := common.Bet{
+		Nombre:     os.Getenv("NOMBRE"),
+		Apellido:   os.Getenv("APELLIDO"),
+		DNI:        os.Getenv("DOCUMENTO"),
+		Nacimiento: os.Getenv("NACIMIENTO"),
+		Numero:     os.Getenv("NUMERO"),
+	}
+
 	clientConfig := common.ClientConfig{
 		ServerAddress: v.GetString("server.address"),
 		ID:            v.GetString("id"),
 		LoopAmount:    v.GetInt("loop.amount"),
 		LoopPeriod:    v.GetDuration("loop.period"),
+		Bet:           bet,
 	}
 
 	client := common.NewClient(clientConfig)
