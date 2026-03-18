@@ -1,6 +1,6 @@
 import socket
 import logging
-
+from common.utils import Bet, store_bets
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -42,16 +42,52 @@ class Server:
         client socket will also be closed
         """
         try:
-            # TODO: Modify the receive to avoid short-reads
-            msg = client_sock.recv(1024).rstrip().decode('utf-8')
-            addr = client_sock.getpeername()
-            logging.info(f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
-            # TODO: Modify the send to avoid short-writes
-            client_sock.send("{}\n".format(msg).encode('utf-8'))
+            msg = self.__recv_until_newline(client_sock)
+
+            bet = self.__parse_bet(msg)
+
+            store_bets([bet])
+
+            logging.info(
+                f"action: apuesta_almacenada | result: success | dni: {bet.document} | numero: {bet.number}"
+            )
+
+            client_sock.sendall(b"ok\n")
+
         except OSError as e:
-            logging.error("action: receive_message | result: fail | error: {e}")
+            logging.error(f"action: receive_message | result: fail | error: {e}")
+
         finally:
             client_sock.close()
+
+
+    def __recv_until_newline(self, sock):
+        data = b"" # inicio el buffer vacío, para luego ir armando el mensaje de la apuesta
+
+        while not data.endswith(b"\n"):
+            chunk = sock.recv(1024) 
+
+            if not chunk: # puede ocurrir que el cliente cierre la conexión
+                raise ConnectionError("client disconnected before end of message") # esto lo captura el try/except de handle_client_connection
+            
+            data += chunk
+
+        return data.decode("utf-8").rstrip("\n")
+    
+    def __parse_bet(self, msg):
+        parts = [p.strip() for p in msg.split(";")]
+
+        if len(parts) != 5:
+            raise ValueError(f"invalid bet format: {msg}")
+
+        return Bet(
+            "1",        # agencia hardcodeada por ahora
+            parts[0],   # nombre
+            parts[1],   # apellido
+            parts[2],   # dni
+            parts[3],   # nacimiento
+            parts[4],   # numero
+        )
 
     def __accept_new_connection(self):
         """
