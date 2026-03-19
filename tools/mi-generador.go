@@ -1,4 +1,4 @@
-package main 
+package main
 
 import (
 	"fmt"
@@ -15,8 +15,7 @@ func main() {
 		os.Exit(1)
 	}
 
-
-	file, err := os.Create(outputFile) 
+	file, err := os.Create(outputFile)
 	if err != nil { // valido error de creación
 		panic(err)
 	}
@@ -53,13 +52,18 @@ func writeClients(file *os.File, numClients int) {
     entrypoint: /client
     environment:
       - CLI_ID=%d
+      - NOMBRE=cliente
+      - APELLIDO=%d
+      - DOCUMENTO=%d
+      - NACIMIENTO=1990-01-01
+      - NUMERO=%d
     networks:
       - testing_net
     volumes:
       - ./client/config.yaml:/config.yaml:ro
     depends_on:
       - server
-`, i, i, i)
+`, i, i, i, i, i, i)
 	}
 }
 
