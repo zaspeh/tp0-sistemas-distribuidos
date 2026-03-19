@@ -8,8 +8,11 @@ class Server:
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
+        self._running = True
 
     def close(self):
+        self._running = False  
+
         if self._server_socket:
             try:
                 self._server_socket.close()
@@ -17,7 +20,7 @@ class Server:
             except Exception as e:
                 logging.error(f"action: close_server_socket | result: fail | error: {e}")
             finally:
-                self._server_socket = None # Evito errores por doble llamados (posibles casos futuros)
+                self._server_socket = None
 
     def run(self):
         """
@@ -28,11 +31,16 @@ class Server:
         finishes, servers starts to accept new connections again
         """
 
-        # TODO: Modify this program to handle signal to graceful shutdown
-        # the server
-        while True:
-            client_sock = self.__accept_new_connection()
-            self.__handle_client_connection(client_sock)
+        while self._running:
+            try:
+                client_sock = self.__accept_new_connection()
+                self.__handle_client_connection(client_sock)
+
+            except OSError:
+                # El socket de cierra GRACEFUL entonces entro acá
+                if not self._running:
+                    break  
+                logging.error("action: accept_connections | result: fail")
 
     def __handle_client_connection(self, client_sock):
         """

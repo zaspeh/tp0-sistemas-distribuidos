@@ -18,18 +18,23 @@ services:
     entrypoint: /client
     environment:
       - CLI_ID=1
+<<<<<<< ej5
       - CLI_LOG_LEVEL=DEBUG
       - NOMBRE=Juan
       - APELLIDO=Perez
       - DOCUMENTO=12345678
       - NACIMIENTO=1990-01-01
       - NUMERO=7574
+=======
+>>>>>>> local
     networks:
       - testing_net
     depends_on:
       - server
     volumes:
       - ./client/config.yaml:/config.yaml:ro
+    depends_on:
+      - server
 
 
 networks:

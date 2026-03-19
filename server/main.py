@@ -11,9 +11,9 @@ def handle_sigterm(server):
     logging.debug("action: shutdown_signal_received | result: success")
 
     server.close()
-
-    logging.debug("action: shutdown_server | result: success")
+    
     sys.exit(0)
+
 
 def initialize_config():
     """ Parse env variables or config file to find program config params
