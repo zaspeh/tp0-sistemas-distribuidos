@@ -83,8 +83,8 @@ func (c *Client) StartClientLoop() {
 
 			log.Infof(
 				"action: apuesta_enviada | result: success | dni: %s | numero: %s",
-				bet.config.DNI,
-				bet.config.Numero,
+				bet.DNI(),
+				bet.Numero(),
 			)
 		}
 

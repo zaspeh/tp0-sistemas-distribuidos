@@ -19,3 +19,11 @@ func NewBet(config BetConfig) *Bet {
 	}
 	return bet
 }
+
+func (b *Bet) DNI() string {
+	return b.config.DNI
+}
+
+func (b *Bet) Numero() string {
+	return b.config.Numero
+}
