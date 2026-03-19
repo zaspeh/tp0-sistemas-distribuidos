@@ -140,8 +140,6 @@ func handleSigterm(client *common.Client) {
 
 		client.Close()
 
-		log.Infof("action: shutdown_client | result: success")
-
 		os.Exit(0)
 	}()
 }
