@@ -1,6 +1,7 @@
 import socket
 import logging
 from common.utils import Bet, store_bets
+from common.protocol import recv_until_newline, parse_bet, send_ok
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -50,9 +51,9 @@ class Server:
         client socket will also be closed
         """
         try:
-            msg = self.__recv_until_newline(client_sock)
+            msg = recv_until_newline(client_sock)
 
-            bet = self.__parse_bet(msg)
+            bet = parse_bet(msg)
 
             store_bets([bet])
 
@@ -60,43 +61,14 @@ class Server:
                 f"action: apuesta_almacenada | result: success | dni: {bet.document} | numero: {bet.number}"
             )
 
-            client_sock.sendall(b"ok\n")
+            send_ok(client_sock)
 
         except OSError as e:
             logging.error(f"action: receive_message | result: fail | error: {e}")
 
         finally:
             client_sock.close()
-
-
-    def __recv_until_newline(self, sock):
-        data = b"" # inicio el buffer vacío, para luego ir armando el mensaje de la apuesta
-
-        while not data.endswith(b"\n"):
-            chunk = sock.recv(1024) 
-
-            if not chunk: # puede ocurrir que el cliente cierre la conexión
-                raise ConnectionError("client disconnected before end of message") # esto lo captura el try/except de handle_client_connection
-            
-            data += chunk
-
-        return data.decode("utf-8").rstrip("\n")
     
-    def __parse_bet(self, msg):
-        parts = [p.strip() for p in msg.strip().split(";")]
-
-        if len(parts) != 5:
-            raise ValueError(f"invalid bet format: {msg}")
-
-        return Bet(
-            "1",        # agencia hardcodeada por ahora
-            parts[0],   # nombre
-            parts[1],   # apellido
-            parts[2],   # dni
-            parts[3],   # nacimiento
-            parts[4],   # numero
-        )
-
     def __accept_new_connection(self):
         """
         Accept new connections
