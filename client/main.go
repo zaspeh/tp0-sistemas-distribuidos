@@ -122,6 +122,7 @@ func main() {
 func handleSigterm(client *common.Client) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGTERM)
+	defer signal.Stop(sigChan) // deja de tirar señales al channel que le paso
 
 	go func() {
 		<-sigChan
@@ -129,8 +130,6 @@ func handleSigterm(client *common.Client) {
 		log.Infof("action: shutdown_signal_received | result: success | signal: SIGTERM")
 
 		client.Close()
-
-		log.Infof("action: shutdown_client | result: success")
 
 		os.Exit(0)
 	}()
