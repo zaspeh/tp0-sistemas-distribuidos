@@ -106,13 +106,15 @@ func main() {
 	PrintConfig(v)
 
 	// capturo la información de la apuesta para inicializar el cliente con esta información
-	bet := common.Bet{
+	betConfig := common.BetConfig{
 		Nombre:     os.Getenv("NOMBRE"),
 		Apellido:   os.Getenv("APELLIDO"),
 		DNI:        os.Getenv("DOCUMENTO"),
 		Nacimiento: os.Getenv("NACIMIENTO"),
 		Numero:     os.Getenv("NUMERO"),
 	}
+
+	bet := common.NewBet(betConfig)
 
 	clientConfig := common.ClientConfig{
 		ServerAddress: v.GetString("server.address"),

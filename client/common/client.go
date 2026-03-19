@@ -17,22 +17,13 @@ type ClientConfig struct {
 	ServerAddress string
 	LoopAmount    int
 	LoopPeriod    time.Duration
-	Bet           Bet
+	Bet           *Bet
 }
 
 // Client Entity that encapsulates how
 type Client struct {
 	config ClientConfig
 	conn   net.Conn
-}
-
-// Información de la apuesta del cliente
-type Bet struct {
-	Nombre     string
-	Apellido   string
-	DNI        string
-	Nacimiento string
-	Numero     string
 }
 
 // NewClient Initializes a new client receiving the configuration
@@ -94,8 +85,8 @@ func (c *Client) StartClientLoop() {
 
 			log.Infof(
 				"action: apuesta_enviada | result: success | dni: %s | numero: %s",
-				bet.DNI,
-				bet.Numero,
+				bet.config.DNI,
+				bet.config.Numero,
 			)
 		}
 
@@ -132,13 +123,13 @@ func (c *Client) SendBet() error {
 	return nil
 }
 
-func SerializeBet(b Bet) []byte {
+func SerializeBet(b *Bet) []byte {
 	msg := fmt.Sprintf("%s;%s;%s;%s;%s\n",
-		b.Nombre,
-		b.Apellido,
-		b.DNI,
-		b.Nacimiento,
-		b.Numero,
+		b.config.Nombre,
+		b.config.Apellido,
+		b.config.DNI,
+		b.config.Nacimiento,
+		b.config.Numero,
 	)
 	return []byte(msg)
 }
