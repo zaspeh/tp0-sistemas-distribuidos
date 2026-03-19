@@ -105,16 +105,7 @@ func main() {
 	// Print program config with debugging purposes
 	PrintConfig(v)
 
-	// capturo la información de la apuesta para inicializar el cliente con esta información
-	betConfig := common.BetConfig{
-		Nombre:     os.Getenv("NOMBRE"),
-		Apellido:   os.Getenv("APELLIDO"),
-		DNI:        os.Getenv("DOCUMENTO"),
-		Nacimiento: os.Getenv("NACIMIENTO"),
-		Numero:     os.Getenv("NUMERO"),
-	}
-
-	bet := common.NewBet(betConfig)
+	bet := createBet()
 
 	clientConfig := common.ClientConfig{
 		ServerAddress: v.GetString("server.address"),
@@ -144,4 +135,17 @@ func handleSigterm(client *common.Client) {
 
 		os.Exit(0)
 	}()
+}
+
+func createBet() *common.Bet {
+	// capturo la información de la apuesta para inicializar el cliente con esta información
+	betConfig := common.BetConfig{
+		Nombre:     os.Getenv("NOMBRE"),
+		Apellido:   os.Getenv("APELLIDO"),
+		DNI:        os.Getenv("DOCUMENTO"),
+		Nacimiento: os.Getenv("NACIMIENTO"),
+		Numero:     os.Getenv("NUMERO"),
+	}
+
+	return common.NewBet(betConfig)
 }
