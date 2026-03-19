@@ -57,13 +57,15 @@ func writeClients(file *os.File, numClients int) {
       - DOCUMENTO=%d
       - NACIMIENTO=1990-01-01
       - NUMERO=%d
+      - DATASET_PATH=/data/agency-%d.csv
     networks:
       - testing_net
     volumes:
       - ./client/config.yaml:/config.yaml:ro
+      - ./data:/data:ro
     depends_on:
       - server
-`, i, i, i, i, i, i)
+`, i, i, i, i, i, i, i)
 	}
 }
 
