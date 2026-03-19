@@ -66,7 +66,7 @@ func (c *Client) StartClientLoop() {
 			return
 		}
 
-		response, err := c.ReceiveConfirmation()
+		response, err := ReceiveConfirmation(c.conn)
 		c.conn.Close()
 
 		if err != nil {

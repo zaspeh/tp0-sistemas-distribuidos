@@ -3,6 +3,7 @@ package common
 import (
 	"bufio"
 	"fmt"
+	"net"
 )
 
 func (c *Client) SendBet() error {
@@ -31,8 +32,8 @@ func SerializeBet(b *Bet) []byte {
 	return []byte(msg)
 }
 
-func (c *Client) ReceiveConfirmation() (string, error) {
-	reader := bufio.NewReader(c.conn)
+func ReceiveConfirmation(conn net.Conn) (string, error) {
+	reader := bufio.NewReader(conn)
 
 	response, err := reader.ReadString('\n')
 	if err != nil {
