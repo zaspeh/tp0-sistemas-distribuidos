@@ -15,7 +15,6 @@ type ClientConfig struct {
 	ServerAddress string
 	LoopAmount    int
 	LoopPeriod    time.Duration
-	Bet           *Bet
 }
 
 // Client Entity that encapsulates how
@@ -50,13 +49,16 @@ func (c *Client) createClientSocket() error {
 }
 
 // StartClientLoop Send messages to the client until some time threshold is met
-func (c *Client) StartClientLoop() {
-	for msgID := 1; msgID <= c.config.LoopAmount; msgID++ {
+func (c *Client) StartClientLoop(batches [][]*Bet) {
+	for _, batch := range batches { // realizo procesamiento por batches
 
-		c.createClientSocket()
+		err := c.createClientSocket()
+		if err != nil { // debería validar que se cree bien el socket
+			return
+		}
 
-		// envío la apuesta :)
-		err := SendBet(c.conn, c.config.Bet)
+		// ahora envío el batch (se encarga el protocolo)
+		err = SendBatch(c.conn, batch)
 		if err != nil {
 			log.Errorf(
 				"action: send_message | result: fail | client_id: %v | error: %v",
@@ -79,12 +81,9 @@ func (c *Client) StartClientLoop() {
 		}
 
 		if response == "ok\n" {
-			bet := c.config.Bet
-
-			log.Infof(
-				"action: apuesta_enviada | result: success | dni: %s | numero: %s",
-				bet.DNI(),
-				bet.Numero(),
+			log.Infof( // no se especificó que se diga nada en el cliente pero no puedo seguir mostrando el DNI y NUMERO
+				"action: apuesta_enviada | result: success | cantidad: %d",
+				len(batch),
 			)
 		}
 

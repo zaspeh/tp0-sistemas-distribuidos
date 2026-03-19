@@ -7,7 +7,11 @@ import (
 )
 
 func SendBet(conn net.Conn, bet *Bet) error {
-	data := SerializeBet(bet)
+	return SendBatch(conn, []*Bet{bet})
+}
+
+func SendBatch(conn net.Conn, bets []*Bet) error {
+	data := SerializeBatch(bets)
 
 	totalWritten := 0
 	for totalWritten < len(data) {
@@ -30,6 +34,17 @@ func SerializeBet(b *Bet) []byte {
 		b.config.Numero,
 	)
 	return []byte(msg)
+}
+
+// para serializar el batch, es como serializar N bets...
+func SerializeBatch(bets []*Bet) []byte {
+	var result []byte
+
+	for _, b := range bets {
+		result = append(result, SerializeBet(b)...)
+	}
+
+	return result
 }
 
 func ReceiveConfirmation(conn net.Conn) (string, error) {

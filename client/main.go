@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"os/signal"
@@ -105,21 +106,30 @@ func main() {
 	// Print program config with debugging purposes
 	PrintConfig(v)
 
-	bet := createBet()
+	datasetPath := os.Getenv("DATASET_PATH")
+
+	bets, err := GetBetsFromPath(datasetPath)
+	if err != nil {
+		log.Criticalf("%s", err)
+	}
+
+	batchSize := v.GetInt("batch.maxAmount")
+
+	batches := ChunkBets(bets, batchSize) // armo los batches teniendo en cuenta el maximo que me dieron en el archivo de configuración
 
 	clientConfig := common.ClientConfig{
 		ServerAddress: v.GetString("server.address"),
 		ID:            v.GetString("id"),
 		LoopAmount:    v.GetInt("loop.amount"),
 		LoopPeriod:    v.GetDuration("loop.period"),
-		Bet:           bet,
 	}
 
+	// el cliente no almacena más las bets
 	client := common.NewClient(clientConfig)
 
 	handleSigterm(client)
 
-	client.StartClientLoop()
+	client.StartClientLoop(batches)
 }
 
 func handleSigterm(client *common.Client) {
@@ -137,15 +147,48 @@ func handleSigterm(client *common.Client) {
 	}()
 }
 
-func createBet() *common.Bet {
-	// capturo la información de la apuesta para inicializar el cliente con esta información
-	betConfig := common.BetConfig{
-		Nombre:     os.Getenv("NOMBRE"),
-		Apellido:   os.Getenv("APELLIDO"),
-		DNI:        os.Getenv("DOCUMENTO"),
-		Nacimiento: os.Getenv("NACIMIENTO"),
-		Numero:     os.Getenv("NUMERO"),
+func GetBetsFromPath(path string) ([]*common.Bet, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var bets []*common.Bet
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() { // así puedo leer una linea por iteración
+		line := scanner.Text()
+		parts := strings.Split(line, ",")
+
+		if len(parts) != 5 { // valdo por si tengo una apuesta inválida
+			continue
+		}
+
+		bet := common.NewBet(common.BetConfig{
+			Nombre:     parts[0],
+			Apellido:   parts[1],
+			DNI:        parts[2],
+			Nacimiento: parts[3],
+			Numero:     parts[4],
+		})
+
+		bets = append(bets, bet)
 	}
 
-	return common.NewBet(betConfig)
+	return bets, scanner.Err()
+}
+
+func ChunkBets(bets []*common.Bet, size int) [][]*common.Bet {
+	var chunks [][]*common.Bet
+
+	for i := 0; i < len(bets); i += size {
+		end := i + size
+		if end > len(bets) {
+			end = len(bets)
+		}
+		chunks = append(chunks, bets[i:end])
+	}
+
+	return chunks
 }
