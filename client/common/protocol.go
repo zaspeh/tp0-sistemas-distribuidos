@@ -6,12 +6,12 @@ import (
 	"net"
 )
 
-func (c *Client) SendBet() error {
-	data := SerializeBet(c.config.Bet)
+func SendBet(conn net.Conn, bet *Bet) error {
+	data := SerializeBet(bet)
 
 	totalWritten := 0
 	for totalWritten < len(data) {
-		n, err := c.conn.Write(data[totalWritten:])
+		n, err := conn.Write(data[totalWritten:])
 		if err != nil {
 			return err
 		}
