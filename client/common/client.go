@@ -1,8 +1,6 @@
 package common
 
 import (
-	"bufio"
-	"fmt"
 	"net"
 	"time"
 
@@ -94,44 +92,6 @@ func (c *Client) StartClientLoop() {
 	}
 
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
-}
-
-func (c *Client) ReceiveConfirmation() (string, error) {
-	reader := bufio.NewReader(c.conn)
-
-	response, err := reader.ReadString('\n')
-	if err != nil {
-		return "", err
-	}
-
-	return response, nil
-}
-
-// modularizo en enviarApuesta
-func (c *Client) SendBet() error {
-	data := SerializeBet(c.config.Bet)
-
-	totalWritten := 0
-	for totalWritten < len(data) {
-		n, err := c.conn.Write(data[totalWritten:])
-		if err != nil {
-			return err
-		}
-		totalWritten += n
-	}
-
-	return nil
-}
-
-func SerializeBet(b *Bet) []byte {
-	msg := fmt.Sprintf("%s;%s;%s;%s;%s\n",
-		b.config.Nombre,
-		b.config.Apellido,
-		b.config.DNI,
-		b.config.Nacimiento,
-		b.config.Numero,
-	)
-	return []byte(msg)
 }
 
 func (c *Client) Close() error {
