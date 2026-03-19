@@ -44,6 +44,9 @@ class Server:
         try:
             msg = self.__recv_until_newline(client_sock)
 
+            if not msg:
+                return
+
             bet = self.__parse_bet(msg)
 
             store_bets([bet])
