@@ -1,20 +1,39 @@
 import socket
 from common.utils import Bet
 
-
-def recv_batch(sock: socket.socket) -> str:
+def _recv_header(sock):
     data = b""
 
-    while not data.endswith(b"\n\n"):
-        chunk = sock.recv(1024)
-
+    while not data.endswith(b"\n"):
+        chunk = sock.recv(1)
         if not chunk:
-            raise ConnectionError("client disconnected before end of batch")
-
+            raise ConnectionError("client disconnected")
         data += chunk
 
     return data.decode("utf-8").strip()
 
+def _parse_length(header: str) -> int:
+    if not header.startswith("LEN:"):
+        raise ValueError("invalid header")
+
+    return int(header.split(":")[1])
+
+def _recv_exact(sock, size: int) -> str:
+    data = b""
+
+    while len(data) < size:
+        chunk = sock.recv(size - len(data))
+        if not chunk:
+            raise ConnectionError("client disconnected")
+        data += chunk
+
+    return data.decode("utf-8")
+
+
+def recv_batch(sock: socket.socket) -> str:
+    header = _recv_header(sock)
+    length = _parse_length(header)
+    return _recv_exact(sock, length)
 
 def parse_batch(msg: str) -> list[Bet]:
     bets = []
@@ -43,10 +62,8 @@ def parse_batch(msg: str) -> list[Bet]:
 
     return bets
 
+def send_message(sock: socket.socket, message: str):
+    body = message.encode("utf-8")
+    header = f"LEN:{len(body)}\n".encode("utf-8")
 
-def send_ok(sock: socket.socket):
-    sock.sendall(b"ok\n")
-
-
-def send_error(sock: socket.socket):
-    sock.sendall(b"error\n")
+    sock.sendall(header + body)

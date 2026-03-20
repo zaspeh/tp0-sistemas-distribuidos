@@ -38,23 +38,64 @@ func SerializeBet(b *Bet) []byte {
 
 // para serializar el batch, es como serializar N bets...
 func SerializeBatch(bets []*Bet) []byte {
-	var result []byte
+	body := []byte{}
 
 	for _, b := range bets {
-		result = append(result, SerializeBet(b)...)
+		body = append(body, SerializeBet(b)...)
 	}
 
-	result = append(result, '\n')
+	header := fmt.Sprintf("LEN:%d\n", len(body))
 
-	return result
+	return append([]byte(header), body...)
 }
-func ReceiveConfirmation(conn net.Conn) (string, error) {
-	reader := bufio.NewReader(conn)
 
-	response, err := reader.ReadString('\n')
+func recvHeader(reader *bufio.Reader) (string, error) {
+	line, err := reader.ReadString('\n')
 	if err != nil {
 		return "", err
 	}
 
-	return response, nil
+	return line[:len(line)-1], nil
+}
+
+func recvExact(reader *bufio.Reader, size int) (string, error) {
+	data := make([]byte, size)
+	totalRead := 0
+
+	for totalRead < size {
+		n, err := reader.Read(data[totalRead:])
+		if err != nil {
+			return "", err
+		}
+		totalRead += n
+	}
+
+	return string(data), nil
+}
+
+func parseLength(header string) (int, error) {
+	var length int
+
+	_, err := fmt.Sscanf(header, "LEN:%d", &length)
+	if err != nil {
+		return 0, fmt.Errorf("invalid header: %s", header)
+	}
+
+	return length, nil
+}
+
+func ReceiveConfirmation(conn net.Conn) (string, error) {
+	reader := bufio.NewReader(conn)
+
+	header, err := recvHeader(reader)
+	if err != nil {
+		return "", err
+	}
+
+	length, err := parseLength(header)
+	if err != nil {
+		return "", err
+	}
+
+	return recvExact(reader, length)
 }

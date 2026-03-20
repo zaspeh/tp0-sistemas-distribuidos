@@ -1,7 +1,7 @@
 import socket
 import logging
 from common.utils import Bet, store_bets
-from common.protocol import parse_batch, recv_batch, send_ok, send_error
+from common.protocol import parse_batch, recv_batch, send_message
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -67,7 +67,7 @@ class Server:
                 f"action: apuesta_recibida | result: success | cantidad: {cantidad}"
             )
 
-            send_ok(client_sock)
+            send_message(client_sock, "ok")
 
         except Exception:
             logging.error(
@@ -75,7 +75,7 @@ class Server:
             )
 
             try:
-                send_error(client_sock)
+                send_message(client_sock, "error")
             except:
                 pass
 
