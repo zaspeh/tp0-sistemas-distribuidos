@@ -57,8 +57,6 @@ class Server:
                 try:
                     msg = recv_batch(client_sock)
 
-
-
                     lines = [l for l in msg.split("\n") if l.strip()]
                     cantidad = len(lines)
 
@@ -72,7 +70,7 @@ class Server:
                     send_message(client_sock, "ok")
 
                 except ConnectionError:
-                    pass
+                    break # si el cliente se desconecta... entonces me voy
                         
                 except Exception:
                     logging.error(
