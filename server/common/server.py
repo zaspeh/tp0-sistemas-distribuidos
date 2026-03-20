@@ -1,7 +1,7 @@
 import socket
 import logging
 from common.utils import Bet, store_bets
-from common.protocol import parse_batch, recv_all, send_ok, send_error
+from common.protocol import parse_batch, recv_batch, send_ok, send_error
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -53,7 +53,7 @@ class Server:
         cantidad = 0 # el enunciado pide que en caso de haber error también logee la cantidad, por las dudas la instancio antes
 
         try:
-            msg = recv_all(client_sock)
+            msg = recv_batch(client_sock)
 
             # cuento las líneas 
             lines = [l for l in msg.split("\n") if l.strip()]

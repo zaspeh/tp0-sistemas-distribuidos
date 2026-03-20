@@ -2,13 +2,15 @@ import socket
 from common.utils import Bet
 
 
-def recv_all(sock: socket.socket) -> str:
+def recv_batch(sock: socket.socket) -> str:
     data = b""
 
-    while True:
+    while not data.endswith(b"\n\n"):
         chunk = sock.recv(1024)
+
         if not chunk:
-            break
+            raise ConnectionError("client disconnected before end of batch")
+
         data += chunk
 
     return data.decode("utf-8").strip()

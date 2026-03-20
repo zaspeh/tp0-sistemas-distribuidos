@@ -44,9 +44,10 @@ func SerializeBatch(bets []*Bet) []byte {
 		result = append(result, SerializeBet(b)...)
 	}
 
+	result = append(result, '\n')
+
 	return result
 }
-
 func ReceiveConfirmation(conn net.Conn) (string, error) {
 	reader := bufio.NewReader(conn)
 

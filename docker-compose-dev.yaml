@@ -5,10 +5,9 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=DEBUG
     networks:
       - testing_net
-    volumes:
+    volumes: 
       - ./server/config.ini:/config.ini:ro
   
 
@@ -18,24 +17,19 @@ services:
     entrypoint: /client
     environment:
       - CLI_ID=1
-<<<<<<< ej5
-      - CLI_LOG_LEVEL=DEBUG
-      - NOMBRE=Juan
-      - APELLIDO=Perez
-      - DOCUMENTO=12345678
+      - NOMBRE=cliente
+      - APELLIDO=1
+      - DOCUMENTO=1
       - NACIMIENTO=1990-01-01
-      - NUMERO=7574
-=======
->>>>>>> local
+      - NUMERO=1
+      - DATASET_PATH=/data/agency-1.csv
     networks:
       - testing_net
-    depends_on:
-      - server
     volumes:
       - ./client/config.yaml:/config.yaml:ro
+      - ./.data:/data:ro
     depends_on:
       - server
-
 
 networks:
   testing_net:
