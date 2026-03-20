@@ -1,7 +1,7 @@
 import socket
 import logging
 from common.utils import Bet, store_bets
-from common.protocol import recv_until_newline, parse_bet, send_ok
+from common.protocol import parse_batch, recv_all, send_ok, send_error
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -50,25 +50,38 @@ class Server:
         If a problem arises in the communication with the client, the
         client socket will also be closed
         """
+        cantidad = 0 # el enunciado pide que en caso de haber error también logee la cantidad, por las dudas la instancio antes
+
         try:
-            msg = recv_until_newline(client_sock)
+            msg = recv_all(client_sock)
 
-            bet = parse_bet(msg)
+            # cuento las líneas 
+            lines = [l for l in msg.split("\n") if l.strip()]
+            cantidad = len(lines)
 
-            store_bets([bet])
+            bets = parse_batch(msg)
+
+            store_bets(bets)
 
             logging.info(
-                f"action: apuesta_almacenada | result: success | dni: {bet.document} | numero: {bet.number}"
+                f"action: apuesta_recibida | result: success | cantidad: {cantidad}"
             )
 
             send_ok(client_sock)
 
-        except OSError as e:
-            logging.error(f"action: receive_message | result: fail | error: {e}")
+        except Exception:
+            logging.error(
+                f"action: apuesta_recibida | result: fail | cantidad: {cantidad}"
+            )
+
+            try:
+                send_error(client_sock)
+            except:
+                pass
 
         finally:
             client_sock.close()
-    
+        
     def __accept_new_connection(self):
         """
         Accept new connections
