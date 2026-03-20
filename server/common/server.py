@@ -72,10 +72,9 @@ class Server:
                     )
 
                     send_message(client_sock, "ok")
-
-                except Exception as e:
+                except Exception:
                     logging.error(
-                        f"action: apuesta_recibida | result: fail | cantidad: {cantidad} | error: {e}"
+                        f"action: apuesta_recibida | result: fail | cantidad: {cantidad}" 
                     )
 
                     try:
@@ -83,8 +82,8 @@ class Server:
                     except:
                         pass
 
-                    break  # si algo falla cierro la conexión
-
+        except ConnectionError:
+            pass
         finally:
             client_sock.close()
         
