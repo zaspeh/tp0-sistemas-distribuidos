@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"os/signal"
@@ -15,8 +14,6 @@ import (
 
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common"
 )
-
-const MaxBatchBytes = 8 * 1024 // 8KB
 
 var log = logging.MustGetLogger("log")
 
@@ -112,14 +109,7 @@ func main() {
 
 	log.Infof("dataset path: %s", datasetPath) // DEBUG
 
-	bets, err := GetBetsFromPath(datasetPath)
-	if err != nil {
-		log.Criticalf("%s", err)
-	}
-
 	batchSize := v.GetInt("batch.maxAmount")
-
-	batches := ChunkBets(bets, batchSize) // armo los batches teniendo en cuenta el maximo que me dieron en el archivo de configuración
 
 	clientConfig := common.ClientConfig{
 		ServerAddress: v.GetString("server.address"),
@@ -133,7 +123,7 @@ func main() {
 
 	handleSigterm(client)
 
-	client.StartClientLoop(batches)
+	client.StartClientLoop(datasetPath, batchSize)
 }
 
 func handleSigterm(client *common.Client) {
@@ -149,64 +139,4 @@ func handleSigterm(client *common.Client) {
 
 		os.Exit(0)
 	}()
-}
-
-func GetBetsFromPath(path string) ([]*common.Bet, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var bets []*common.Bet
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() { // así puedo leer una linea por iteración
-		line := scanner.Text()
-		parts := strings.Split(line, ",")
-
-		if len(parts) != 5 { // valdo por si tengo una apuesta inválida
-			continue
-		}
-
-		bet := common.NewBet(common.BetConfig{
-			Nombre:     parts[0],
-			Apellido:   parts[1],
-			DNI:        parts[2],
-			Nacimiento: parts[3],
-			Numero:     parts[4],
-		})
-
-		bets = append(bets, bet)
-	}
-
-	return bets, scanner.Err()
-}
-
-func ChunkBets(bets []*common.Bet, maxAmount int) [][]*common.Bet {
-	var chunks [][]*common.Bet
-	var currentBatch []*common.Bet
-	currentSize := 0
-
-	for _, bet := range bets {
-		serialized := common.SerializeBet(bet)
-		betSize := len(serialized)
-
-		// si rompe límite por cantidad según maxAmount o tamaño según MaxBatchBytes, entonces corto el batch
-		if len(currentBatch) >= maxAmount || currentSize+betSize > MaxBatchBytes {
-			chunks = append(chunks, currentBatch)
-			currentBatch = nil
-			currentSize = 0
-		}
-
-		currentBatch = append(currentBatch, bet)
-		currentSize += betSize
-	}
-
-	// último batch
-	if len(currentBatch) > 0 {
-		chunks = append(chunks, currentBatch)
-	}
-
-	return chunks
 }

@@ -50,34 +50,40 @@ class Server:
         If a problem arises in the communication with the client, the
         client socket will also be closed
         """
-        cantidad = 0 # el enunciado pide que en caso de haber error también logee la cantidad, por las dudas la instancio antes
-
         try:
-            msg = recv_batch(client_sock)
+            while True:
+                cantidad = 0
 
-            # cuento las líneas 
-            lines = [l for l in msg.split("\n") if l.strip()]
-            cantidad = len(lines)
+                try:
+                    msg = recv_batch(client_sock)
 
-            bets = parse_batch(msg)
+                    if not msg:
+                        break
 
-            store_bets(bets)
+                    lines = [l for l in msg.split("\n") if l.strip()]
+                    cantidad = len(lines)
 
-            logging.info(
-                f"action: apuesta_recibida | result: success | cantidad: {cantidad}"
-            )
+                    bets = parse_batch(msg)
 
-            send_message(client_sock, "ok")
+                    store_bets(bets)
 
-        except Exception:
-            logging.error(
-                f"action: apuesta_recibida | result: fail | cantidad: {cantidad}"
-            )
+                    logging.info(
+                        f"action: apuesta_recibida | result: success | cantidad: {cantidad}"
+                    )
 
-            try:
-                send_message(client_sock, "error")
-            except:
-                pass
+                    send_message(client_sock, "ok")
+
+                except Exception as e:
+                    logging.error(
+                        f"action: apuesta_recibida | result: fail | cantidad: {cantidad} | error: {e}"
+                    )
+
+                    try:
+                        send_message(client_sock, "error")
+                    except:
+                        pass
+
+                    break  # si algo falla cierro la conexión
 
         finally:
             client_sock.close()

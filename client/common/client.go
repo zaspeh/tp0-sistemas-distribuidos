@@ -1,11 +1,17 @@
 package common
 
 import (
+	"bufio"
+	"fmt"
 	"net"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/op/go-logging"
 )
+
+const MaxBatchBytes = 8 * 1024 // 8KB
 
 var log = logging.MustGetLogger("log")
 
@@ -49,48 +55,115 @@ func (c *Client) createClientSocket() error {
 }
 
 // StartClientLoop Send messages to the client until some time threshold is met
-func (c *Client) StartClientLoop(batches [][]*Bet) {
-	for _, batch := range batches { // realizo procesamiento por batches
+func (c *Client) StartClientLoop(datasetPath string, maxAmount int) {
+	err := c.createClientSocket()
+	if err != nil { // debería validar que se cree bien el socket
+		return
+	}
 
-		err := c.createClientSocket()
-		if err != nil { // debería validar que se cree bien el socket
-			return
-		}
+	// ahora envío de a batches para no cargarlo en memoria
+	totalBets, err := c.ProcessAndSendBatches(datasetPath, maxAmount)
+	if err != nil {
+		log.Errorf(
+			"action: send_message | result: fail | client_id: %v | error: %v",
+			c.config.ID,
+			err,
+		)
+		return
+	}
 
-		// ahora envío el batch (se encarga el protocolo)
-		err = SendBatch(c.conn, batch)
-		if err != nil {
-			log.Errorf(
-				"action: send_message | result: fail | client_id: %v | error: %v",
-				c.config.ID,
-				err,
-			)
-			return
-		}
+	c.conn.Close()
 
-		response, err := ReceiveConfirmation(c.conn)
-		c.conn.Close()
-
-		if err != nil {
-			log.Errorf(
-				"action: receive_message | result: fail | client_id: %v | error: %v",
-				c.config.ID,
-				err,
-			)
-			return
-		}
-
-		if response == "ok\n" {
-			log.Infof( // no se especificó que se diga nada en el cliente pero no puedo seguir mostrando el DNI y NUMERO
-				"action: apuesta_enviada | result: success | cantidad: %d",
-				len(batch),
-			)
-		}
-
-		time.Sleep(c.config.LoopPeriod)
+	if err == nil {
+		log.Infof( // no se especificó que se diga nada en el cliente pero no puedo seguir mostrando el DNI y NUMERO
+			"action: apuesta_enviada | result: success | cantidad: %d",
+			totalBets,
+		)
+	} else {
+		log.Errorf(
+			"action: apuesta_enviada | result: fail | cantidad: %d",
+			totalBets,
+		)
 	}
 
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
+}
+
+func (c *Client) ProcessAndSendBatches(datasetPath string, maxAmount int) (int, error) {
+	file, err := os.Open(datasetPath)
+	if err != nil {
+		return 0, err
+	}
+	defer file.Close() // aseguro que se cierre el archivo
+
+	scanner := bufio.NewScanner(file)
+
+	var batch []*Bet
+	currentSize := 0
+	totalBets := 0
+
+	for scanner.Scan() { // leo por lineas
+		line := scanner.Text()
+		parts := strings.Split(line, ",")
+
+		if len(parts) != 5 {
+			continue
+		}
+
+		bet := NewBet(BetConfig{
+			Nombre:     parts[0],
+			Apellido:   parts[1],
+			DNI:        parts[2],
+			Nacimiento: parts[3],
+			Numero:     parts[4],
+		})
+
+		betSize := len(SerializeBet(bet))
+
+		// si no me entra más nada en el batch lo envío y lo reinicio
+		if len(batch) >= maxAmount || currentSize+betSize > MaxBatchBytes {
+			if err := c.sendBatchAndWait(batch); err != nil {
+				return totalBets, err
+			}
+
+			totalBets += len(batch)
+			batch = nil
+			currentSize = 0
+
+			time.Sleep(c.config.LoopPeriod)
+		}
+
+		batch = append(batch, bet)
+		currentSize += betSize
+	}
+
+	// envío lo que resta
+	if len(batch) > 0 {
+		if err := c.sendBatchAndWait(batch); err != nil {
+			return totalBets, err
+		}
+		totalBets += len(batch)
+	}
+
+	return totalBets, scanner.Err()
+}
+
+func (c *Client) sendBatchAndWait(batch []*Bet) error {
+	err := SendBatch(c.conn, batch)
+	if err != nil {
+		return err
+	}
+
+	data, err := ReceiveConfirmation(c.conn)
+	if err != nil {
+		return err
+	}
+
+	if data != "ok" {
+		return fmt.Errorf("server returned error: %s", data)
+	}
+
+	return nil
 }
 
 func (c *Client) Close() error {
