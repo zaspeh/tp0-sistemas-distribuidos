@@ -62,7 +62,7 @@ func writeClients(file *os.File, numClients int) {
       - testing_net
     volumes:
       - ./client/config.yaml:/config.yaml:ro
-      - ./data:/data:ro
+      - ./.data:/data:ro
     depends_on:
       - server
 `, i, i, i, i, i, i, i)
