@@ -16,6 +16,8 @@ import (
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common"
 )
 
+const MaxBatchBytes = 8 * 1024 // 8KB
+
 var log = logging.MustGetLogger("log")
 
 // InitConfig Function that uses viper library to parse configuration parameters.
@@ -181,15 +183,29 @@ func GetBetsFromPath(path string) ([]*common.Bet, error) {
 	return bets, scanner.Err()
 }
 
-func ChunkBets(bets []*common.Bet, size int) [][]*common.Bet {
+func ChunkBets(bets []*common.Bet, maxAmount int) [][]*common.Bet {
 	var chunks [][]*common.Bet
+	var currentBatch []*common.Bet
+	currentSize := 0
 
-	for i := 0; i < len(bets); i += size {
-		end := i + size
-		if end > len(bets) {
-			end = len(bets)
+	for _, bet := range bets {
+		serialized := common.SerializeBet(bet)
+		betSize := len(serialized)
+
+		// si rompe límite por cantidad según maxAmount o tamaño según MaxBatchBytes, entonces corto el batch
+		if len(currentBatch) >= maxAmount || currentSize+betSize > MaxBatchBytes {
+			chunks = append(chunks, currentBatch)
+			currentBatch = nil
+			currentSize = 0
 		}
-		chunks = append(chunks, bets[i:end])
+
+		currentBatch = append(currentBatch, bet)
+		currentSize += betSize
+	}
+
+	// último batch
+	if len(currentBatch) > 0 {
+		chunks = append(chunks, currentBatch)
 	}
 
 	return chunks
