@@ -57,14 +57,12 @@ class Server:
                 try:
                     msg = recv_batch(client_sock)
 
-                    if not msg:
-                        break
+
 
                     lines = [l for l in msg.split("\n") if l.strip()]
                     cantidad = len(lines)
 
                     bets = parse_batch(msg)
-
                     store_bets(bets)
 
                     logging.info(
@@ -72,6 +70,10 @@ class Server:
                     )
 
                     send_message(client_sock, "ok")
+
+                except ConnectionError:
+                    pass
+                        
                 except Exception:
                     logging.error(
                         f"action: apuesta_recibida | result: fail | cantidad: {cantidad}" 
@@ -81,9 +83,8 @@ class Server:
                         send_message(client_sock, "error")
                     except:
                         pass
+                    
 
-        except ConnectionError:
-            pass
         finally:
             client_sock.close()
         
