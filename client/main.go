@@ -108,6 +108,8 @@ func main() {
 
 	datasetPath := os.Getenv("DATASET_PATH")
 
+	log.Infof("dataset path: %s", datasetPath) // DEBUG
+
 	bets, err := GetBetsFromPath(datasetPath)
 	if err != nil {
 		log.Criticalf("%s", err)
