@@ -48,7 +48,9 @@ func (c *Client) createClientSocket() error {
 			c.config.ID,
 			err,
 		)
+		return err
 	}
+
 	c.conn = conn
 	return nil
 }
@@ -68,6 +70,7 @@ func (c *Client) StartClientLoop(datasetPath string, maxAmount int) {
 		return
 	}
 
+	log.Infof("action: enviar_todos_los_batches | result: success ")
 	// aviso que envié todas las bets
 	err = SendDone(c.conn)
 	if err != nil {
@@ -75,6 +78,7 @@ func (c *Client) StartClientLoop(datasetPath string, maxAmount int) {
 		return
 	}
 
+	log.Infof("action: nofiticar_envio_de_todas_las_apuestas | result: success ")
 	// consulto los ganadores
 	err = SendAskWinners(c.conn)
 	if err != nil {

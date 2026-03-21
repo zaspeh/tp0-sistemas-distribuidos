@@ -1,6 +1,6 @@
 import logging
-from common.protocol import send_message
-from common.utils import Bet, store_bets, parse_batch
+from common.protocol import send_message, parse_batch, RESPONSE_OK, RESPONSE_ERROR
+from common.utils import Bet, store_bets
 
 class Message:
     def handle(self, server, client_sock):
@@ -11,7 +11,7 @@ class BatchMessage(Message):
         self.bets = parse_batch(body)
 
     def handle(self, server, client_sock):
-        self.client_agency[client_sock] = self.bets[0].agency
+        server.client_agency[client_sock] = self.bets[0].agency
         cantidad = len(self.bets)
 
         try:
@@ -21,14 +21,15 @@ class BatchMessage(Message):
                 f"action: apuesta_recibida | result: success | cantidad: {cantidad}"
             )
 
-            send_message(client_sock, "ok")
-            return True
+            send_message(client_sock, "ok", RESPONSE_OK)
+
+            return False
         except Exception:
             logging.error(
                 f"action: apuesta_recibida | result: fail | cantidad: {cantidad}"
             )
 
-            send_message(client_sock, "error")
+            send_message(client_sock, "error", RESPONSE_ERROR)
             client_sock.close()
 
 

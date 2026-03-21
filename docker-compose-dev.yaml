@@ -31,6 +31,26 @@ services:
     depends_on:
       - server
 
+  client2:
+    container_name: client2
+    image: client:latest
+    entrypoint: /client
+    environment:
+      - CLI_ID=2
+      - NOMBRE=cliente
+      - APELLIDO=2
+      - DOCUMENTO=2
+      - NACIMIENTO=1990-01-01
+      - NUMERO=2
+      - DATASET_PATH=/data/agency-2.csv
+    networks:
+      - testing_net
+    volumes:
+      - ./client/config.yaml:/config.yaml:ro
+      - ./.data:/data:ro
+    depends_on:
+      - server
+
 networks:
   testing_net:
     ipam:

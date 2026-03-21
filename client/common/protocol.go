@@ -7,9 +7,12 @@ import (
 )
 
 const (
-	SEND_BATCH  = 0
-	NOTIFY_DONE = 1
-	ASK_WINNERS = 2
+	SEND_BATCH       = 0
+	NOTIFY_DONE      = 1
+	ASK_WINNERS      = 2
+	RESPONSE_OK      = 3
+	RESPONSE_ERROR   = 4
+	RESPONSE_WINNERS = 5
 )
 
 func writeAll(conn net.Conn, data []byte) error {
@@ -33,7 +36,7 @@ func SendBatch(conn net.Conn, clientID string, bets []*Bet) error {
 }
 
 func SerializeBet(clientId string, b *Bet) []byte {
-	msg := fmt.Sprintf("%s,%s;%s;%s;%s;%s\n",
+	msg := fmt.Sprintf("%s;%s;%s;%s;%s;%s\n",
 		clientId,
 		b.config.Nombre,
 		b.config.Apellido,
@@ -84,8 +87,8 @@ func recvExact(reader *bufio.Reader, size int) (string, error) {
 func parseHeader(header string) (int, int, error) {
 	var length, msgType int
 
-	_, err := fmt.Sscanf(header, "LEN:%d;TYPE:%d", &length, &msgType)
-	if err != nil {
+	n, err := fmt.Sscanf(header, "LEN:%d;TYPE:%d", &length, &msgType)
+	if err != nil || n == RESPONSE_ERROR {
 		return 0, 0, fmt.Errorf("invalid header: %s", header)
 	}
 

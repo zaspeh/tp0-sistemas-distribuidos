@@ -1,6 +1,10 @@
 import socket
 from common.utils import Bet
 
+RESPONSE_OK = 3
+RESPONSE_ERROR = 4
+RESPONSE_WINNERS = 5
+
 def _recv_header(sock):
     data = b""
 
@@ -54,7 +58,7 @@ def parse_batch(msg: str) -> list[Bet]:
 
         parts = [p.strip() for p in line.split(";")]
 
-        if len(parts) != 5:
+        if len(parts) != 6:
             raise ValueError(f"invalid bet format: {line}")
 
         bet = Bet(
@@ -70,10 +74,9 @@ def parse_batch(msg: str) -> list[Bet]:
 
     return bets
 
-def send_message(sock: socket.socket, message: str):
+def send_message(sock: socket.socket, message: str, msg_type: int):
     body = message.encode("utf-8")
-    header = f"LEN:{len(body)}\n".encode("utf-8")
+    header = f"LEN:{len(body)};TYPE:{msg_type}\n".encode("utf-8")
 
     sock.sendall(header + body)
-
     

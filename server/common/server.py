@@ -2,7 +2,7 @@ import socket
 import logging
 from common.utils import Bet, load_bets, has_won
 from common.message_factory import build_message
-from common.protocol import recv_raw, send_message
+from common.protocol import recv_raw, send_message, RESPONSE_WINNERS
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -11,9 +11,10 @@ class Server:
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self._running = True
+        self.client_agency = {}
         self.finished_clients = set()
         self.waiting_winners = []
-        self.total_clients = 5
+        self.total_clients = 1
         self.sorteo_done = False
 
     def close(self):
@@ -126,5 +127,5 @@ class Server:
         ]
 
         response = "\n".join(winners)
-        send_message(client_sock, response)
+        send_message(client_sock, response, RESPONSE_WINNERS)
         client_sock.close()
