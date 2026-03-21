@@ -59,25 +59,39 @@ func (c *Client) StartClientLoop(datasetPath string, maxAmount int) {
 	if err != nil { // debería validar que se cree bien el socket
 		return
 	}
+	defer c.conn.Close()
 
 	// ahora envío de a batches para no cargarlo en memoria
 	err = c.ProcessAndSendBatches(datasetPath, maxAmount)
 	if err != nil {
-		log.Errorf(
-			"action: send_message | result: fail | client_id: %v | error: %v",
-			c.config.ID,
-			err,
-		)
+		log_send_error(c.config.ID, err)
 		return
 	}
 
-	// Avisar que envié todas las apuestas
-	// Consultar ganador
+	// aviso que envié todas las bets
+	err = SendDone(c.conn)
+	if err != nil {
+		log_send_error(c.config.ID, err)
+		return
+	}
 
-	// esperar respuesta...
-	// una vez tengamos resultados -> action: consulta_ganadores | result: success | cant_ganadores: ${CANT}
+	// consulto los ganadores
+	err = SendAskWinners(c.conn)
+	if err != nil {
+		log_send_error(c.config.ID, err)
+		return
+	}
 
-	c.conn.Close()
+	// recibo los ganadores
+	response, err := ReceiveMessage(c.conn)
+	if err != nil {
+		log_send_error(c.config.ID, err)
+		return
+	}
+
+	log.Infof("action: consulta_ganadores | result: success | cant_ganadores: %d",
+		countLines(response),
+	)
 
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
 }
@@ -141,7 +155,7 @@ func (c *Client) sendBatchAndWait(batch []*Bet) error {
 		return err
 	}
 
-	data, err := ReceiveConfirmation(c.conn)
+	data, err := ReceiveMessage(c.conn)
 	if err != nil {
 		return err
 	}

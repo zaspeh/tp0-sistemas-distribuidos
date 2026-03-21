@@ -6,19 +6,30 @@ import (
 	"net"
 )
 
-func SendBatch(conn net.Conn, clientID string, bets []*Bet) error {
-	data := SerializeBatch(clientID, bets)
+const (
+	SEND_BATCH  = 0
+	NOTIFY_DONE = 1
+	ASK_WINNERS = 2
+)
 
-	totalWritten := 0
-	for totalWritten < len(data) {
-		n, err := conn.Write(data[totalWritten:])
+func writeAll(conn net.Conn, data []byte) error {
+	total := 0
+
+	for total < len(data) {
+		n, err := conn.Write(data[total:])
 		if err != nil {
 			return err
 		}
-		totalWritten += n
+		total += n
 	}
 
 	return nil
+}
+
+func SendBatch(conn net.Conn, clientID string, bets []*Bet) error {
+	data := SerializeBatch(clientID, bets)
+
+	return writeAll(conn, data)
 }
 
 func SerializeBet(clientId string, b *Bet) []byte {
@@ -41,7 +52,7 @@ func SerializeBatch(clientId string, bets []*Bet) []byte {
 		body = append(body, SerializeBet(clientId, b)...)
 	}
 
-	header := fmt.Sprintf("LEN:%d\n", len(body))
+	header := fmt.Sprintf("LEN:%d;TYPE:%d\n", len(body), SEND_BATCH)
 
 	return append([]byte(header), body...)
 }
@@ -70,18 +81,18 @@ func recvExact(reader *bufio.Reader, size int) (string, error) {
 	return string(data), nil
 }
 
-func parseLength(header string) (int, error) {
-	var length int
+func parseHeader(header string) (int, int, error) {
+	var length, msgType int
 
-	_, err := fmt.Sscanf(header, "LEN:%d", &length)
+	_, err := fmt.Sscanf(header, "LEN:%d;TYPE:%d", &length, &msgType)
 	if err != nil {
-		return 0, fmt.Errorf("invalid header: %s", header)
+		return 0, 0, fmt.Errorf("invalid header: %s", header)
 	}
 
-	return length, nil
+	return length, msgType, nil
 }
 
-func ReceiveConfirmation(conn net.Conn) (string, error) {
+func ReceiveMessage(conn net.Conn) (string, error) {
 	reader := bufio.NewReader(conn)
 
 	header, err := recvHeader(reader)
@@ -89,10 +100,36 @@ func ReceiveConfirmation(conn net.Conn) (string, error) {
 		return "", err
 	}
 
-	length, err := parseLength(header)
+	length, _, err := parseHeader(header)
 	if err != nil {
 		return "", err
 	}
 
 	return recvExact(reader, length)
+}
+
+func SerializeDone() []byte {
+	body := []byte("DONE")
+
+	header := fmt.Sprintf("LEN:%d;TYPE:%d\n", len(body), NOTIFY_DONE)
+
+	return append([]byte(header), body...)
+}
+
+func SerializeAskWinners() []byte {
+	body := []byte("ASK")
+
+	header := fmt.Sprintf("LEN:%d;TYPE:%d\n", len(body), ASK_WINNERS)
+
+	return append([]byte(header), body...)
+}
+
+func SendDone(conn net.Conn) error {
+	data := SerializeDone()
+	return writeAll(conn, data)
+}
+
+func SendAskWinners(conn net.Conn) error {
+	data := SerializeAskWinners()
+	return writeAll(conn, data)
 }

@@ -1,5 +1,10 @@
 import socket
 from common.utils import Bet
+from common.message import BatchMessage, NotifyDoneMessage, AskWinnersMessage
+
+SEND_BATCH  = 0
+NOTIFY_DONE = 1
+ASK_WINNERS = 2
 
 def _recv_header(sock):
     data = b""
@@ -12,11 +17,17 @@ def _recv_header(sock):
 
     return data.decode("utf-8").strip()
 
-def _parse_length(header: str) -> int:
+def _parse_header(header: str) -> int:
     if not header.startswith("LEN:"):
         raise ValueError("invalid header")
 
-    return int(header.split(":")[1])
+    # A mi me llega "LEN:size;TYPE:number"
+    parts = header.split(";")
+
+    length = int(parts[0].split(":")[1])
+    msg_type = int(parts[1].split(":")[1])
+
+    return length, msg_type
 
 def _recv_exact(sock, size: int) -> str:
     data = b""
@@ -30,10 +41,22 @@ def _recv_exact(sock, size: int) -> str:
     return data.decode("utf-8")
 
 
-def recv_batch(sock: socket.socket) -> str:
+def recv_msg(sock: socket.socket):
     header = _recv_header(sock)
-    length = _parse_length(header)
-    return _recv_exact(sock, length)
+    length, msg_type = _parse_header(header)
+    body = _recv_exact(sock, length)
+
+    if msg_type == SEND_BATCH:
+        return BatchMessage(body)
+
+    elif msg_type == NOTIFY_DONE:
+        return NotifyDoneMessage()
+
+    elif msg_type == ASK_WINNERS:
+        return AskWinnersMessage()
+    
+    else:
+        raise ValueError("unknown message type")
 
 def parse_batch(msg: str) -> list[Bet]:
     bets = []
@@ -50,12 +73,12 @@ def parse_batch(msg: str) -> list[Bet]:
             raise ValueError(f"invalid bet format: {line}")
 
         bet = Bet(
-            "1",        # agencia hardcodeada
-            parts[0],
+            parts[0],        # no está más hardcodeada la agencia
             parts[1],
             parts[2],
             parts[3],
             parts[4],
+            parts[5],
         )
 
         bets.append(bet)

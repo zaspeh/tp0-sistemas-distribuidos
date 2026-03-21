@@ -1,7 +1,7 @@
 import socket
 import logging
-from common.utils import Bet, store_bets
-from common.protocol import parse_batch, recv_batch, send_message
+from common.utils import Bet, load_bets, has_won
+from common.protocol import recv_msg, send_message
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -10,6 +10,10 @@ class Server:
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self._running = True
+        self.finished_clients = set()
+        self.waiting_winners = []
+        self.total_clients = 5
+        self.sorteo_done = False
 
     def close(self):
         self._running = False  
@@ -50,41 +54,18 @@ class Server:
         If a problem arises in the communication with the client, the
         client socket will also be closed
         """
-        try:
-            while True:
-                cantidad = 0
+        while True: # termino cuando me pregunta los ganadores
+            try:
+                msg = recv_msg(client_sock)
+                should_break = msg.handle(client_sock)
 
-                try:
-                    msg = recv_batch(client_sock)
+                if should_break == True:
+                    break
 
-                    lines = [l for l in msg.split("\n") if l.strip()]
-                    cantidad = len(lines)
+            except ConnectionError:
+                # client_sock.close() -> debería cerrar el socket?
+                break # si el cliente se desconecta... entonces me voy
 
-                    bets = parse_batch(msg)
-                    store_bets(bets)
-
-                    logging.info(
-                        f"action: apuesta_recibida | result: success | cantidad: {cantidad}"
-                    )
-
-                    send_message(client_sock, "ok")
-
-                except ConnectionError:
-                    break # si el cliente se desconecta... entonces me voy
-                        
-                except Exception:
-                    logging.error(
-                        f"action: apuesta_recibida | result: fail | cantidad: {cantidad}" 
-                    )
-
-                    try:
-                        send_message(client_sock, "error")
-                    except:
-                        pass
-                    
-
-        finally:
-            client_sock.close()
         
     def __accept_new_connection(self):
         """
@@ -99,3 +80,48 @@ class Server:
         c, addr = self._server_socket.accept()
         logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
         return c
+
+    def mark_client_done(self, client_sock):
+        self.finished_clients.add(client_sock)
+
+        if len(self.finished_clients) == self.total_clients:
+            logging.info("action: sorteo | result: success")
+            self.sorteo_done = True
+
+            self._choose_winners()
+
+            for sock in self.waiting_winners:
+                self._send_winners(sock)
+
+            self.waiting_winners = {}
+
+        return False
+
+
+    def _choose_winners(self):
+        self.winners_by_agency = {}
+
+        for bet in load_bets():
+            if has_won(bet):
+                self.winners_by_agency.setdefault(bet.agency, []).append(bet.document)
+
+    def handle_winners_request(self, client_sock):
+        if not self.sorteo_done:
+            self.waiting_winners.append(client_sock)
+            return True
+
+        self._send_winners(client_sock)
+        return True
+
+    def _send_winners(self, client_sock):
+        agency = self.client_agency[client_sock]
+
+        winners = [
+            b.document
+            for b in load_bets()
+            if b.agency == agency and has_won(b)
+        ]
+
+        response = "\n".join(winners)
+        send_message(client_sock, response)
+        client_sock.close()
