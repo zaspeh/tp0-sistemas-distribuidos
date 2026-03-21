@@ -1,6 +1,6 @@
 import logging
-from common.protocol import parse_batch, recv_msg, send_message
-from common.utils import Bet, store_bets
+from common.protocol import send_message
+from common.utils import Bet, store_bets, parse_batch
 
 class Message:
     def handle(self, server, client_sock):

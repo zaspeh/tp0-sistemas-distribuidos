@@ -1,7 +1,8 @@
 import socket
 import logging
 from common.utils import Bet, load_bets, has_won
-from common.protocol import recv_msg, send_message
+from common.message_factory import build_message
+from common.protocol import recv_raw, send_message
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -56,8 +57,10 @@ class Server:
         """
         while True: # termino cuando me pregunta los ganadores
             try:
-                msg = recv_msg(client_sock)
-                should_break = msg.handle(client_sock)
+                body, msg_type = recv_raw(client_sock)
+                msg = build_message(body, msg_type)
+
+                should_break = msg.handle(self, client_sock)
 
                 if should_break == True:
                     break

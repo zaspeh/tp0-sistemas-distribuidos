@@ -1,10 +1,5 @@
 import socket
 from common.utils import Bet
-from common.message import BatchMessage, NotifyDoneMessage, AskWinnersMessage
-
-SEND_BATCH  = 0
-NOTIFY_DONE = 1
-ASK_WINNERS = 2
 
 def _recv_header(sock):
     data = b""
@@ -41,22 +36,12 @@ def _recv_exact(sock, size: int) -> str:
     return data.decode("utf-8")
 
 
-def recv_msg(sock: socket.socket):
+def recv_raw(sock):
     header = _recv_header(sock)
     length, msg_type = _parse_header(header)
     body = _recv_exact(sock, length)
 
-    if msg_type == SEND_BATCH:
-        return BatchMessage(body)
-
-    elif msg_type == NOTIFY_DONE:
-        return NotifyDoneMessage()
-
-    elif msg_type == ASK_WINNERS:
-        return AskWinnersMessage()
-    
-    else:
-        raise ValueError("unknown message type")
+    return body, msg_type
 
 def parse_batch(msg: str) -> list[Bet]:
     bets = []
@@ -90,3 +75,5 @@ def send_message(sock: socket.socket, message: str):
     header = f"LEN:{len(body)}\n".encode("utf-8")
 
     sock.sendall(header + body)
+
+    
