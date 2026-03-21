@@ -6,8 +6,8 @@ import (
 	"net"
 )
 
-func SendBatch(conn net.Conn, bets []*Bet) error {
-	data := SerializeBatch(bets)
+func SendBatch(conn net.Conn, clientID string, bets []*Bet) error {
+	data := SerializeBatch(clientID, bets)
 
 	totalWritten := 0
 	for totalWritten < len(data) {
@@ -21,8 +21,9 @@ func SendBatch(conn net.Conn, bets []*Bet) error {
 	return nil
 }
 
-func SerializeBet(b *Bet) []byte {
-	msg := fmt.Sprintf("%s;%s;%s;%s;%s\n",
+func SerializeBet(clientId string, b *Bet) []byte {
+	msg := fmt.Sprintf("%s,%s;%s;%s;%s;%s\n",
+		clientId,
 		b.config.Nombre,
 		b.config.Apellido,
 		b.config.DNI,
@@ -33,11 +34,11 @@ func SerializeBet(b *Bet) []byte {
 }
 
 // para serializar el batch, es como serializar N bets...
-func SerializeBatch(bets []*Bet) []byte {
+func SerializeBatch(clientId string, bets []*Bet) []byte {
 	body := []byte{}
 
 	for _, b := range bets {
-		body = append(body, SerializeBet(b)...)
+		body = append(body, SerializeBet(clientId, b)...)
 	}
 
 	header := fmt.Sprintf("LEN:%d\n", len(body))

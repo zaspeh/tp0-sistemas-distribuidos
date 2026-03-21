@@ -71,6 +71,12 @@ func (c *Client) StartClientLoop(datasetPath string, maxAmount int) {
 		return
 	}
 
+	// Avisar que envié todas las apuestas
+	// Consultar ganador
+
+	// esperar respuesta...
+	// una vez tengamos resultados -> action: consulta_ganadores | result: success | cant_ganadores: ${CANT}
+
 	c.conn.Close()
 
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
@@ -101,7 +107,7 @@ func (c *Client) ProcessAndSendBatches(datasetPath string, maxAmount int) error 
 			Numero:     parts[4],
 		})
 
-		betSize := len(SerializeBet(bet))
+		betSize := len(SerializeBet(c.config.ID, bet))
 
 		// si no me entra más nada en el batch lo envío y lo reinicio
 		if len(batch) >= maxAmount || currentSize+betSize > MaxBatchBytes {
@@ -130,7 +136,7 @@ func (c *Client) ProcessAndSendBatches(datasetPath string, maxAmount int) error 
 }
 
 func (c *Client) sendBatchAndWait(batch []*Bet) error {
-	err := SendBatch(c.conn, batch)
+	err := SendBatch(c.conn, c.config.ID, batch)
 	if err != nil {
 		return err
 	}
