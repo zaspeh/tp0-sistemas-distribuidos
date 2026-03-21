@@ -106,9 +106,6 @@ func main() {
 	PrintConfig(v)
 
 	datasetPath := os.Getenv("DATASET_PATH")
-
-	log.Infof("dataset path: %s", datasetPath) // DEBUG
-
 	batchSize := v.GetInt("batch.maxAmount")
 
 	clientConfig := common.ClientConfig{

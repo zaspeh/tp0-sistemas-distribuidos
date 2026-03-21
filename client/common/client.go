@@ -2,7 +2,6 @@ package common
 
 import (
 	"bufio"
-	"fmt"
 	"net"
 	"os"
 	"strings"
@@ -62,7 +61,7 @@ func (c *Client) StartClientLoop(datasetPath string, maxAmount int) {
 	}
 
 	// ahora envío de a batches para no cargarlo en memoria
-	totalBets, err := c.ProcessAndSendBatches(datasetPath, maxAmount)
+	err = c.ProcessAndSendBatches(datasetPath, maxAmount)
 	if err != nil {
 		log.Errorf(
 			"action: send_message | result: fail | client_id: %v | error: %v",
@@ -74,25 +73,13 @@ func (c *Client) StartClientLoop(datasetPath string, maxAmount int) {
 
 	c.conn.Close()
 
-	if err == nil {
-		log.Infof( // no se especificó que se diga nada en el cliente pero no puedo seguir mostrando el DNI y NUMERO
-			"action: apuesta_enviada | result: success | cantidad: %d",
-			totalBets,
-		)
-	} else {
-		log.Errorf(
-			"action: apuesta_enviada | result: fail | cantidad: %d",
-			totalBets,
-		)
-	}
-
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
 }
 
-func (c *Client) ProcessAndSendBatches(datasetPath string, maxAmount int) (int, error) {
+func (c *Client) ProcessAndSendBatches(datasetPath string, maxAmount int) error {
 	file, err := os.Open(datasetPath)
 	if err != nil {
-		return 0, err
+		return err
 	}
 	defer file.Close() // aseguro que se cierre el archivo
 
@@ -105,10 +92,6 @@ func (c *Client) ProcessAndSendBatches(datasetPath string, maxAmount int) (int, 
 	for scanner.Scan() { // leo por lineas
 		line := scanner.Text()
 		parts := strings.Split(line, ",")
-
-		if len(parts) != 5 {
-			continue
-		}
 
 		bet := NewBet(BetConfig{
 			Nombre:     parts[0],
@@ -123,14 +106,12 @@ func (c *Client) ProcessAndSendBatches(datasetPath string, maxAmount int) (int, 
 		// si no me entra más nada en el batch lo envío y lo reinicio
 		if len(batch) >= maxAmount || currentSize+betSize > MaxBatchBytes {
 			if err := c.sendBatchAndWait(batch); err != nil {
-				return totalBets, err
+				return err
 			}
 
 			totalBets += len(batch)
 			batch = nil
 			currentSize = 0
-
-			time.Sleep(c.config.LoopPeriod)
 		}
 
 		batch = append(batch, bet)
@@ -140,12 +121,12 @@ func (c *Client) ProcessAndSendBatches(datasetPath string, maxAmount int) (int, 
 	// envío lo que resta
 	if len(batch) > 0 {
 		if err := c.sendBatchAndWait(batch); err != nil {
-			return totalBets, err
+			return err
 		}
 		totalBets += len(batch)
 	}
 
-	return totalBets, scanner.Err()
+	return scanner.Err()
 }
 
 func (c *Client) sendBatchAndWait(batch []*Bet) error {
@@ -160,7 +141,15 @@ func (c *Client) sendBatchAndWait(batch []*Bet) error {
 	}
 
 	if data != "ok" {
-		return fmt.Errorf("server returned error: %s", data)
+		log.Errorf(
+			"action: apuesta_enviada | result: fail | cantidad: %d",
+			len(batch),
+		)
+	} else {
+		log.Infof( // no se especificó que se diga nada en el cliente pero no puedo seguir mostrando el DNI y NUMERO
+			"action: apuesta_enviada | result: success | cantidad: %d",
+			len(batch),
+		)
 	}
 
 	return nil

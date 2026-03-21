@@ -6,10 +6,6 @@ import (
 	"net"
 )
 
-func SendBet(conn net.Conn, bet *Bet) error {
-	return SendBatch(conn, []*Bet{bet})
-}
-
 func SendBatch(conn net.Conn, bets []*Bet) error {
 	data := SerializeBatch(bets)
 
