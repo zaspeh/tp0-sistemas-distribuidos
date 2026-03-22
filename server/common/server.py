@@ -86,6 +86,7 @@ class Server:
         return c
 
     def mark_client_done(self, client_sock):
+        logging.info("action: agregar_cliente_listo | result: success | clientes_totales = %d", self.total_clients)
         self.finished_clients.add(client_sock)
 
         if len(self.finished_clients) == self.total_clients:
