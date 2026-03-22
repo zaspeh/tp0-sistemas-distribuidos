@@ -86,8 +86,10 @@ func (c *Client) StartClientLoop(datasetPath string, maxAmount int) {
 		return
 	}
 
+	log.Infof("action: esperando_a_recibir_ganadores | result: success ")
 	// recibo los ganadores
 	response, err := ReceiveMessage(c.conn)
+	log.Infof("action: recibir_ganadores | result: success ")
 	if err != nil {
 		log_send_error(c.config.ID, err)
 		return
