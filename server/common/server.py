@@ -12,6 +12,7 @@ class Server:
         self._server_socket.listen(listen_backlog)
         self._running = True
         self.client_agency = {}
+        self.winners_by_agency = {}
         self.finished_clients = []
         self.waiting_winners = []
         self.total_clients = total_clients
@@ -67,7 +68,7 @@ class Server:
                     break
 
             except ConnectionError:
-                # client_sock.close() -> debería cerrar el socket?
+                client_sock.close()
                 break # si el cliente se desconecta... entonces me voy
 
         
@@ -97,10 +98,9 @@ class Server:
             for sock in self.waiting_winners:
                 self._send_winners(sock)
 
-            self.waiting_winners = {}
+            self.waiting_winners = []
 
         return False
-
 
     def _choose_winners(self):
         self.winners_by_agency = {}
