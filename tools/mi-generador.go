@@ -21,25 +21,26 @@ func main() {
 	}
 	defer file.Close() // al final de la función cierro el archivo, garantiza cierre aunque haya un panic
 
-	writeServer(file)
+	writeServer(file, numClients)
 	writeClients(file, numClients)
 	writeNetworks(file)
 }
 
 // escribo la definición del servidor
-func writeServer(file *os.File) {
-	fmt.Fprintln(file, `services:
+func writeServer(file *os.File, numClients int) {
+	fmt.Fprintf(file, `services:
   server:
     container_name: server
     image: server:latest
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - TOTAL_CLIENTS=%d
     networks:
       - testing_net
     volumes: 
       - ./server/config.ini:/config.ini:ro
-  `) // al añadir 'volumes: xxx' aseguro que use el config.ini dentro de la carpeta del host y no dentro del de la imagen
+  `, numClients) // al añadir 'volumes: xxx' aseguro que use el config.ini dentro de la carpeta del host y no dentro del de la imagen
 }
 
 // escribo la definición de los clientes

@@ -5,7 +5,7 @@ from common.message_factory import build_message
 from common.protocol import recv_raw, send_message, RESPONSE_WINNERS
 
 class Server:
-    def __init__(self, port, listen_backlog):
+    def __init__(self, port, listen_backlog, total_clients):
         # Initialize server socket
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
@@ -14,7 +14,7 @@ class Server:
         self.client_agency = {}
         self.finished_clients = set()
         self.waiting_winners = []
-        self.total_clients = 1
+        self.total_clients = total_clients
         self.sorteo_done = False
 
     def close(self):
