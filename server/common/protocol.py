@@ -19,16 +19,16 @@ def recv_until_newline(sock: socket.socket) -> str:
 def parse_bet(msg: str) -> Bet:
     parts = [p.strip() for p in msg.strip().split(";")]
 
-    if len(parts) != 5:
+    if len(parts) != 6:
         raise ValueError(f"invalid bet format: {msg}")
 
     return Bet(
-        "1",        # agencia hardcodeada por ahora
-        parts[0],   # nombre
-        parts[1],   # apellido
-        parts[2],   # dni
-        parts[3],   # nacimiento
-        parts[4],   # numero
+        parts[0],   # Agencia deja de estar hardcodeada
+        parts[1],   # nombre
+        parts[2],   # apellido
+        parts[3],   # dni
+        parts[4],   # nacimiento
+        parts[5],   # numero
     )
 
 

@@ -56,7 +56,7 @@ func (c *Client) StartClientLoop() {
 		c.createClientSocket()
 
 		// envío la apuesta :)
-		err := SendBet(c.conn, c.config.Bet)
+		err := SendBet(c.conn, c.config.ID, c.config.Bet)
 		if err != nil {
 			log.Errorf(
 				"action: send_message | result: fail | client_id: %v | error: %v",

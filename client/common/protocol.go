@@ -6,8 +6,8 @@ import (
 	"net"
 )
 
-func SendBet(conn net.Conn, bet *Bet) error {
-	data := SerializeBet(bet)
+func SendBet(conn net.Conn, clientID string, bet *Bet) error {
+	data := SerializeBet(clientID, bet)
 
 	totalWritten := 0
 	for totalWritten < len(data) {
@@ -21,8 +21,9 @@ func SendBet(conn net.Conn, bet *Bet) error {
 	return nil
 }
 
-func SerializeBet(b *Bet) []byte {
-	msg := fmt.Sprintf("%s;%s;%s;%s;%s\n",
+func SerializeBet(clientId string, b *Bet) []byte {
+	msg := fmt.Sprintf("%s;%s;%s;%s;%s;%s\n",
+		clientId,
 		b.config.Nombre,
 		b.config.Apellido,
 		b.config.DNI,
