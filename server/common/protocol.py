@@ -46,16 +46,16 @@ def parse_batch(msg: str) -> list[Bet]:
 
         parts = [p.strip() for p in line.split(";")]
 
-        if len(parts) != 5:
+        if len(parts) != 6:
             raise ValueError(f"invalid bet format: {line}")
 
         bet = Bet(
-            "1",        # agencia hardcodeada
-            parts[0],
+            parts[0],        # agencia deja de estar hardcodeada
             parts[1],
             parts[2],
             parts[3],
             parts[4],
+            parts[5],
         )
 
         bets.append(bet)

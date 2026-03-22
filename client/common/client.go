@@ -101,11 +101,11 @@ func (c *Client) ProcessAndSendBatches(datasetPath string, maxAmount int) error 
 			Numero:     parts[4],
 		})
 
-		betSize := len(SerializeBet(bet))
+		betSize := len(SerializeBet(c.config.ID, bet))
 
 		// si no me entra más nada en el batch lo envío y lo reinicio
 		if len(batch) >= maxAmount || currentSize+betSize > MaxBatchBytes {
-			if err := c.sendBatchAndWait(batch); err != nil {
+			if err := c.sendBatchAndWait(c.config.ID, batch); err != nil {
 				return err
 			}
 
@@ -120,7 +120,7 @@ func (c *Client) ProcessAndSendBatches(datasetPath string, maxAmount int) error 
 
 	// envío lo que resta
 	if len(batch) > 0 {
-		if err := c.sendBatchAndWait(batch); err != nil {
+		if err := c.sendBatchAndWait(c.config.ID, batch); err != nil {
 			return err
 		}
 		totalBets += len(batch)
@@ -129,8 +129,8 @@ func (c *Client) ProcessAndSendBatches(datasetPath string, maxAmount int) error 
 	return scanner.Err()
 }
 
-func (c *Client) sendBatchAndWait(batch []*Bet) error {
-	err := SendBatch(c.conn, batch)
+func (c *Client) sendBatchAndWait(ClientID string, batch []*Bet) error {
+	err := SendBatch(c.conn, ClientID, batch)
 	if err != nil {
 		return err
 	}
