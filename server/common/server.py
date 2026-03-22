@@ -12,7 +12,7 @@ class Server:
         self._server_socket.listen(listen_backlog)
         self._running = True
         self.client_agency = {}
-        self.finished_clients = set()
+        self.finished_clients = []
         self.waiting_winners = []
         self.total_clients = total_clients
         self.sorteo_done = False
@@ -86,8 +86,8 @@ class Server:
         return c
 
     def mark_client_done(self, client_sock):
-        logging.info(f"action: agregar_cliente_listo | result: success | clientes_totales = {self.total_clients}")
-        self.finished_clients.add(client_sock)
+        logging.info(f"action: agregar_cliente_listo | result: success | clientes_totales = {self.total_clients} | clientes_actuales = {len(self.finished_clients)}")
+        self.finished_clients.append(client_sock)
 
         if len(self.finished_clients) == self.total_clients:
             logging.info("action: sorteo | result: success")
