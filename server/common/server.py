@@ -82,11 +82,10 @@ class Server:
         # Connection arrived
         logging.info('action: accept_connections | result: in_progress')
         c, addr = self._server_socket.accept()
-        logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
+        logging.info(f'action: accept_connections | result: success | ip: {addr[0]}') 
         return c
 
     def mark_client_done(self, client_sock):
-        logging.info(f"action: agregar_cliente_listo | result: success | clientes_totales: {self.total_clients} | clientes_actuales: {len(self.finished_clients)}")
         self.finished_clients.append(client_sock)
 
         if len(self.finished_clients) == self.total_clients:
