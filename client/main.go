@@ -118,14 +118,9 @@ func main() {
 	// el cliente no almacena más las bets
 	client := common.NewClient(clientConfig)
 
-	handleSigterm(client)
-
-	client.StartClientLoop(datasetPath, batchSize)
-}
-
-func handleSigterm(client *common.Client) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGTERM)
+	defer signal.Stop(sigChan)
 
 	go func() {
 		<-sigChan
@@ -134,6 +129,7 @@ func handleSigterm(client *common.Client) {
 
 		client.Close()
 
-		os.Exit(0)
 	}()
+
+	client.StartClientLoop(datasetPath, batchSize)
 }
