@@ -13,6 +13,8 @@ const (
 	RESPONSE_OK      = 3
 	RESPONSE_ERROR   = 4
 	RESPONSE_WINNERS = 5
+	ERROR_MSG        = "error"
+	OK_MSG           = "ok"
 )
 
 func writeAll(conn net.Conn, data []byte) error {

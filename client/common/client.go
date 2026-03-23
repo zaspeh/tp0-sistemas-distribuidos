@@ -171,14 +171,14 @@ func (c *Client) sendBatchAndWait(batch []*Bet) error {
 	}
 
 	switch data {
-	case "error":
+	case ERROR_MSG:
 		log.Errorf(
 			"action: apuesta_enviada | result: fail | cantidad: %d",
 			len(batch),
 		)
 		c.sendBatchAndWait(batch) // reenvío si hubo un error
 
-	case "ok":
+	case OK_MSG:
 		log.Infof(
 			"action: apuesta_enviada | result: success | cantidad: %d",
 			len(batch),
