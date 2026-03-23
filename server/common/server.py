@@ -2,7 +2,7 @@ import socket
 import logging
 from common.utils import Bet, load_bets, has_won
 from common.message_factory import build_message
-from common.protocol import recv_raw, send_message, RESPONSE_WINNERS
+from common.protocol import recv_raw, send_winners, RESPONSE_WINNERS
 
 class Server:
     def __init__(self, port, listen_backlog, total_clients):
@@ -126,6 +126,5 @@ class Server:
             if b.agency == agency and has_won(b)
         ]
 
-        response = "\n".join(winners)
-        send_message(client_sock, response, RESPONSE_WINNERS)
+        send_winners(client_sock, winners)
         client_sock.close()

@@ -74,9 +74,19 @@ def parse_batch(msg: str) -> list[Bet]:
 
     return bets
 
-def send_message(sock: socket.socket, message: str, msg_type: int):
+
+def _send_message(sock: socket.socket, message: str, msg_type: int):
     body = message.encode("utf-8")
     header = f"LEN:{len(body)};TYPE:{msg_type}\n".encode("utf-8")
 
     sock.sendall(header + body)
     
+def send_winners(sock: socket.socket, winners: []):
+    message = "\n".join(winners)
+    _send_message(sock, message, RESPONSE_WINNERS)
+
+def send_error(sock: socket.socket):
+    _send_message(sock, "error", RESPONSE_ERROR)
+
+def send_ok(sock: socket.socket):
+    _send_message(sock, "ok", RESPONSE_OK)
