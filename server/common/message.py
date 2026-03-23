@@ -30,9 +30,7 @@ class BatchMessage(Message):
             )
 
             send_error(client_sock)
-            client_sock.close() # si catcheo este error, no va a tirar error arriba y no se cierra la conexión
             return True
-
 
 class NotifyDoneMessage(Message):
     def handle(self, server, client_sock):
