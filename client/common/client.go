@@ -145,6 +145,7 @@ func (c *Client) sendBatchAndWait(ClientID string, batch []*Bet) error {
 			"action: apuesta_enviada | result: fail | cantidad: %d",
 			len(batch),
 		)
+		c.sendBatchAndWait(ClientID, batch) // reenvío el batch completo
 	} else {
 		log.Infof( // no se especificó que se diga nada en el cliente pero no puedo seguir mostrando el DNI y NUMERO
 			"action: apuesta_enviada | result: success | cantidad: %d",
