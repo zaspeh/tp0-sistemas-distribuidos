@@ -170,14 +170,16 @@ func (c *Client) sendBatchAndWait(batch []*Bet) error {
 		return err
 	}
 
-	if data != "ok" {
+	switch data {
+	case "error":
 		log.Errorf(
 			"action: apuesta_enviada | result: fail | cantidad: %d",
 			len(batch),
 		)
-		c.sendBatchAndWait(batch) // reenvío si hubo un error con el batch actual
-	} else {
-		log.Infof( // no se especificó que se diga nada en el cliente pero no puedo seguir mostrando el DNI y NUMERO
+		c.sendBatchAndWait(batch) // reenvío si hubo un error
+
+	case "ok":
+		log.Infof(
 			"action: apuesta_enviada | result: success | cantidad: %d",
 			len(batch),
 		)
