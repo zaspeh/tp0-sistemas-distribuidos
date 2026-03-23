@@ -93,6 +93,10 @@ func (c *Client) ProcessAndSendBatches(datasetPath string, maxAmount int) error 
 		line := scanner.Text()
 		parts := strings.Split(line, ",")
 
+		if len(parts) != 5 { // salteo si no tiene 5 partes para evitar que rompa la ejecución (no mando esa bet)
+			continue
+		}
+
 		bet := NewBet(BetConfig{
 			Nombre:     parts[0],
 			Apellido:   parts[1],
