@@ -21,8 +21,9 @@ type ClientConfig struct {
 
 // Client Entity that encapsulates how
 type Client struct {
-	config ClientConfig
-	conn   net.Conn
+	config  ClientConfig
+	conn    net.Conn
+	running bool
 }
 
 // NewClient Initializes a new client receiving the configuration
@@ -54,7 +55,13 @@ func (c *Client) createClientSocket() error {
 func (c *Client) StartClientLoop() {
 	// There is an autoincremental msgID to identify every message sent
 	// Messages if the message amount threshold has not been surpassed
+	c.running = true
+
 	for msgID := 1; msgID <= c.config.LoopAmount; msgID++ {
+		if c.running == false {
+			break
+		}
+
 		// Create the connection the server in every loop iteration. Send an
 		c.createClientSocket()
 
@@ -89,6 +96,7 @@ func (c *Client) StartClientLoop() {
 }
 
 func (c *Client) Close() error {
+	c.running = false
 	if c.conn != nil {
 		err := c.conn.Close()
 		if err != nil {
