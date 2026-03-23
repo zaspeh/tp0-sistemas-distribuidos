@@ -6,6 +6,11 @@ import (
 	"net"
 )
 
+const (
+	ERROR_MSG = "error"
+	OK_MSG    = "ok"
+)
+
 func SendBatch(conn net.Conn, clientID string, bets []*Bet) error {
 	data := SerializeBatch(clientID, bets)
 

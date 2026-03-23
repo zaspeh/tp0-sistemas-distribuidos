@@ -109,7 +109,7 @@ func (c *Client) ProcessAndSendBatches(datasetPath string, maxAmount int) error 
 
 		// si no me entra más nada en el batch lo envío y lo reinicio
 		if len(batch) >= maxAmount || currentSize+betSize > MaxBatchBytes {
-			if err := c.sendBatchAndWait(c.config.ID, batch); err != nil {
+			if err := c.sendBatchAndWait(batch); err != nil {
 				return err
 			}
 
@@ -124,7 +124,7 @@ func (c *Client) ProcessAndSendBatches(datasetPath string, maxAmount int) error 
 
 	// envío lo que resta
 	if len(batch) > 0 {
-		if err := c.sendBatchAndWait(c.config.ID, batch); err != nil {
+		if err := c.sendBatchAndWait(batch); err != nil {
 			return err
 		}
 		totalBets += len(batch)
@@ -133,8 +133,8 @@ func (c *Client) ProcessAndSendBatches(datasetPath string, maxAmount int) error 
 	return scanner.Err()
 }
 
-func (c *Client) sendBatchAndWait(ClientID string, batch []*Bet) error {
-	err := SendBatch(c.conn, ClientID, batch)
+func (c *Client) sendBatchAndWait(batch []*Bet) error {
+	err := SendBatch(c.conn, c.config.ID, batch)
 	if err != nil {
 		return err
 	}
@@ -144,14 +144,16 @@ func (c *Client) sendBatchAndWait(ClientID string, batch []*Bet) error {
 		return err
 	}
 
-	if data != "ok" {
+	switch data {
+	case ERROR_MSG:
 		log.Errorf(
 			"action: apuesta_enviada | result: fail | cantidad: %d",
 			len(batch),
 		)
-		c.sendBatchAndWait(ClientID, batch) // reenvío el batch completo
-	} else {
-		log.Infof( // no se especificó que se diga nada en el cliente pero no puedo seguir mostrando el DNI y NUMERO
+		c.sendBatchAndWait(batch) // reenvío si hubo un error
+
+	case OK_MSG:
+		log.Infof(
 			"action: apuesta_enviada | result: success | cantidad: %d",
 			len(batch),
 		)
