@@ -15,7 +15,8 @@ class BatchMessage(Message):
         cantidad = len(self.bets)
 
         try:
-            store_bets(self.bets)
+            with server.file_lock:
+                store_bets(self.bets)
 
             logging.info(
                 f"action: apuesta_recibida | result: success | cantidad: {cantidad}"
@@ -30,7 +31,6 @@ class BatchMessage(Message):
             )
 
             send_message(client_sock, "error", RESPONSE_ERROR)
-            client_sock.close() # si catcheo este error, no va a tirar error arriba y no se cierra la conexión
             return True
 
 

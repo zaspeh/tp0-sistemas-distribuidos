@@ -1,5 +1,6 @@
 import socket
 import logging
+import threading
 from common.utils import Bet, load_bets, has_won
 from common.message_factory import build_message
 from common.protocol import recv_raw, send_message, RESPONSE_WINNERS
@@ -14,9 +15,11 @@ class Server:
         self.client_agency = {}
         self.winners_by_agency = {}
         self.finished_clients = []
-        self.waiting_winners = []
         self.total_clients = total_clients
         self.sorteo_done = False
+        self.lock = threading.Lock()
+        self.file_lock = threading.Lock()
+        self.condition = threading.Condition(self.lock)
 
     def close(self):
         self._running = False  
@@ -38,16 +41,20 @@ class Server:
         communication with a client. After client with communucation
         finishes, servers starts to accept new connections again
         """
-
         while self._running:
             try:
                 client_sock = self.__accept_new_connection()
-                self.__handle_client_connection(client_sock)
+
+                t = threading.Thread(
+                    target=self.__handle_client_connection,
+                    args=(client_sock,),
+                    daemon=True
+                )
+                t.start()
 
             except OSError:
-                # El socket de cierra GRACEFUL entonces entro acá
                 if not self._running:
-                    break  
+                    break
                 logging.error("action: accept_connections | result: fail")
 
     def __handle_client_connection(self, client_sock):
@@ -57,24 +64,25 @@ class Server:
         If a problem arises in the communication with the client, the
         client socket will also be closed
         """
-        while True: # termino cuando me pregunta los ganadores
-            try:
+        try:
+            while True:
                 body, msg_type = recv_raw(client_sock)
                 msg = build_message(body, msg_type)
 
                 should_break = msg.handle(self, client_sock)
 
-                if should_break == True:
+                if should_break:
                     break
 
-            except ConnectionError:
-                client_sock.close()
-                break # si el cliente se desconecta... entonces me voy
+        except ConnectionError:
+            pass
 
+        finally:
+            client_sock.close()
         
     def __accept_new_connection(self):
         """
-        Accept new connections
+        Accept new connectionsac
 
         Function blocks until a connection to a client is made.
         Then connection created is printed and returned
@@ -87,21 +95,20 @@ class Server:
         return c
 
     def mark_client_done(self, client_sock):
-        self.finished_clients.append(client_sock)
+        with self.condition:
+            if client_sock not in self.finished_clients: # Prevengo duplicados
+                self.finished_clients.append(client_sock)
 
-        if len(self.finished_clients) == self.total_clients:
-            logging.info("action: sorteo | result: success")
-            self.sorteo_done = True
+            if len(self.finished_clients) == self.total_clients:
+                logging.info("action: sorteo | result: success")
+                self.sorteo_done = True
 
-            self._choose_winners()
+                self._choose_winners()
 
-            for sock in self.waiting_winners:
-                self._send_winners(sock)
-
-            self.waiting_winners = []
+                self.condition.notify_all()
 
         return False
-
+    
     def _choose_winners(self):
         self.winners_by_agency = {}
 
@@ -110,9 +117,9 @@ class Server:
                 self.winners_by_agency.setdefault(bet.agency, []).append(bet.document)
 
     def handle_winners_request(self, client_sock):
-        if not self.sorteo_done:
-            self.waiting_winners.append(client_sock)
-            return True
+        with self.condition:
+            while not self.sorteo_done: # prevengo spurious wake
+                self.condition.wait() 
 
         self._send_winners(client_sock)
         return True
@@ -120,12 +127,7 @@ class Server:
     def _send_winners(self, client_sock):
         agency = self.client_agency[client_sock]
 
-        winners = [
-            b.document
-            for b in load_bets()
-            if b.agency == agency and has_won(b)
-        ]
+        winners = self.winners_by_agency.get(agency, [])
 
         response = "\n".join(winners)
         send_message(client_sock, response, RESPONSE_WINNERS)
-        client_sock.close()

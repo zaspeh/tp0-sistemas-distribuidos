@@ -5,7 +5,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - TOTAL_CLIENTS=2
+      - TOTAL_CLIENTS=3
     networks:
       - testing_net
     volumes: 
@@ -43,6 +43,26 @@ services:
       - NACIMIENTO=1990-01-01
       - NUMERO=2
       - DATASET_PATH=/data/agency-2.csv
+    networks:
+      - testing_net
+    volumes:
+      - ./client/config.yaml:/config.yaml:ro
+      - ./.data:/data:ro
+    depends_on:
+      - server
+
+  client3:
+    container_name: client3
+    image: client:latest
+    entrypoint: /client
+    environment:
+      - CLI_ID=3
+      - NOMBRE=cliente
+      - APELLIDO=3
+      - DOCUMENTO=3
+      - NACIMIENTO=1990-01-01
+      - NUMERO=3
+      - DATASET_PATH=/data/agency-3.csv
     networks:
       - testing_net
     volumes:
