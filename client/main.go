@@ -114,12 +114,6 @@ func main() {
 
 	client := common.NewClient(clientConfig)
 
-	handleSigterm(client)
-
-	client.StartClientLoop()
-}
-
-func handleSigterm(client *common.Client) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGTERM)
 	defer signal.Stop(sigChan)
@@ -132,4 +126,6 @@ func handleSigterm(client *common.Client) {
 		client.Close()
 
 	}()
+
+	client.StartClientLoop()
 }
