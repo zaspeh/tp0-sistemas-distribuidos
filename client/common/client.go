@@ -173,7 +173,7 @@ func (c *Client) sendBatchAndWait(batch []*Bet) error {
 			"action: apuesta_enviada | result: fail | cantidad: %d",
 			len(batch),
 		)
-		c.sendBatchAndWait(batch) // reenvío si hubo un error
+		return c.sendBatchAndWait(batch) // reenvío si hubo un error
 
 	case OK_MSG:
 		log.Infof(
