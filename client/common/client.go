@@ -119,6 +119,10 @@ func (c *Client) ProcessAndSendBatches(datasetPath string, maxAmount int) error 
 		line := scanner.Text()
 		parts := strings.Split(line, ",")
 
+		if len(parts) != 5 { // salteo si no tiene 5 partes para evitar que rompa la ejecución (no mando esa bet)
+			continue
+		}
+
 		bet := NewBet(BetConfig{
 			Nombre:     parts[0],
 			Apellido:   parts[1],
@@ -171,6 +175,7 @@ func (c *Client) sendBatchAndWait(batch []*Bet) error {
 			"action: apuesta_enviada | result: fail | cantidad: %d",
 			len(batch),
 		)
+		c.sendBatchAndWait(batch) // reenvío si hubo un error con el batch actual
 	} else {
 		log.Infof( // no se especificó que se diga nada en el cliente pero no puedo seguir mostrando el DNI y NUMERO
 			"action: apuesta_enviada | result: success | cantidad: %d",
