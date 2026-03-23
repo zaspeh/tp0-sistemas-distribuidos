@@ -3,7 +3,7 @@ import logging
 import threading
 from common.utils import Bet, load_bets, has_won
 from common.message_factory import build_message
-from common.protocol import recv_raw, send_message, RESPONSE_WINNERS
+from common.protocol import recv_raw, send_winners, RESPONSE_WINNERS
 
 class Server:
     def __init__(self, port, listen_backlog, total_clients):
@@ -101,14 +101,14 @@ class Server:
 
             if len(self.finished_clients) == self.total_clients:
                 logging.info("action: sorteo | result: success")
-                self.sorteo_done = True
-
                 self._choose_winners()
+
+                self.sorteo_done = True
 
                 self.condition.notify_all()
 
         return False
-    
+        
     def _choose_winners(self):
         self.winners_by_agency = {}
 
@@ -121,7 +121,7 @@ class Server:
             while not self.sorteo_done: # prevengo spurious wake
                 self.condition.wait() 
 
-        self._send_winners(client_sock)
+            self._send_winners(client_sock)
         return True
 
     def _send_winners(self, client_sock):
@@ -129,5 +129,4 @@ class Server:
 
         winners = self.winners_by_agency.get(agency, [])
 
-        response = "\n".join(winners)
-        send_message(client_sock, response, RESPONSE_WINNERS)
+        send_winners(client_sock, winners)

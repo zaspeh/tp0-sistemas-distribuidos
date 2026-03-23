@@ -1,5 +1,5 @@
 import logging
-from common.protocol import send_message, parse_batch, RESPONSE_OK, RESPONSE_ERROR
+from common.protocol import send_ok, send_error, parse_batch, RESPONSE_OK, RESPONSE_ERROR
 from common.utils import Bet, store_bets
 
 class Message:
@@ -22,7 +22,7 @@ class BatchMessage(Message):
                 f"action: apuesta_recibida | result: success | cantidad: {cantidad}"
             )
 
-            send_message(client_sock, "ok", RESPONSE_OK)
+            send_ok(client_sock)
 
             return False
         except Exception:
@@ -30,7 +30,7 @@ class BatchMessage(Message):
                 f"action: apuesta_recibida | result: fail | cantidad: {cantidad}"
             )
 
-            send_message(client_sock, "error", RESPONSE_ERROR)
+            send_error(client_sock)
             return True
 
 

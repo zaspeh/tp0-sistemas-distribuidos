@@ -80,3 +80,12 @@ def send_message(sock: socket.socket, message: str, msg_type: int):
 
     sock.sendall(header + body)
     
+def send_winners(sock: socket.socket, winners: []):
+    message = "\n".join(winners)
+    send_message(sock, message, RESPONSE_WINNERS)
+
+def send_error(sock: socket.socket):
+    send_message(sock, "error", RESPONSE_ERROR)
+
+def send_ok(sock: socket.socket):
+    send_message(sock, "ok", RESPONSE_OK)
