@@ -20,9 +20,8 @@ type ClientConfig struct {
 
 // Client Entity that encapsulates how
 type Client struct {
-	config  ClientConfig
-	conn    net.Conn
-	running bool
+	config ClientConfig
+	conn   net.Conn
 }
 
 // NewClient Initializes a new client receiving the configuration
@@ -52,52 +51,45 @@ func (c *Client) createClientSocket() error {
 
 // StartClientLoop Send messages to the client until some time threshold is met
 func (c *Client) StartClientLoop() {
-	c.running = true
-	for msgID := 1; msgID <= c.config.LoopAmount; msgID++ {
+	c.createClientSocket()
 
-		c.createClientSocket()
+	// envío la apuesta :)
+	err := SendBet(c.conn, c.config.ID, c.config.Bet)
+	if err != nil {
+		log.Errorf(
+			"action: send_message | result: fail | client_id: %v | error: %v",
+			c.config.ID,
+			err,
+		)
+		return
+	}
 
-		// envío la apuesta :)
-		err := SendBet(c.conn, c.config.ID, c.config.Bet)
-		if err != nil {
-			log.Errorf(
-				"action: send_message | result: fail | client_id: %v | error: %v",
-				c.config.ID,
-				err,
-			)
-			return
-		}
+	response, err := ReceiveConfirmation(c.conn)
+	c.conn.Close()
 
-		response, err := ReceiveConfirmation(c.conn)
-		c.conn.Close()
+	if err != nil {
+		log.Errorf(
+			"action: receive_message | result: fail | client_id: %v | error: %v",
+			c.config.ID,
+			err,
+		)
+		return
+	}
 
-		if err != nil {
-			log.Errorf(
-				"action: receive_message | result: fail | client_id: %v | error: %v",
-				c.config.ID,
-				err,
-			)
-			return
-		}
+	if response == "ok\n" {
+		bet := c.config.Bet
 
-		if response == "ok\n" {
-			bet := c.config.Bet
-
-			log.Infof(
-				"action: apuesta_enviada | result: success | dni: %s | numero: %s",
-				bet.DNI(),
-				bet.Numero(),
-			)
-		}
-
-		time.Sleep(c.config.LoopPeriod)
+		log.Infof(
+			"action: apuesta_enviada | result: success | dni: %s | numero: %s",
+			bet.DNI(),
+			bet.Numero(),
+		)
 	}
 
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
 }
 
 func (c *Client) Close() error {
-	c.running = false
 	if c.conn != nil {
 		err := c.conn.Close()
 		if err != nil {
