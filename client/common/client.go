@@ -70,7 +70,6 @@ func (c *Client) StartClientLoop(datasetPath string, maxAmount int) {
 		return
 	}
 
-	log.Infof("action: enviar_todos_los_batches | result: success ")
 	// aviso que envié todas las bets
 	err = SendDone(c.conn)
 	if err != nil {
@@ -78,7 +77,6 @@ func (c *Client) StartClientLoop(datasetPath string, maxAmount int) {
 		return
 	}
 
-	log.Infof("action: nofiticar_envio_de_todas_las_apuestas | result: success ")
 	// consulto los ganadores
 	err = SendAskWinners(c.conn)
 	if err != nil {
@@ -86,10 +84,9 @@ func (c *Client) StartClientLoop(datasetPath string, maxAmount int) {
 		return
 	}
 
-	log.Infof("action: esperando_a_recibir_ganadores | result: success ")
 	// recibo los ganadores
 	response, err := ReceiveMessage(c.conn)
-	log.Infof("action: recibir_ganadores | result: success ")
+
 	if err != nil {
 		log_send_error(c.config.ID, err)
 		return
