@@ -129,4 +129,3 @@ class Server:
         ]
 
         send_winners(client_sock, winners)
-        client_sock.close()
