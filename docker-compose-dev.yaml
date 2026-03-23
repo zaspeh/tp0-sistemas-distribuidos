@@ -5,12 +5,12 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - TOTAL_CLIENTS=2
     networks:
       - testing_net
     volumes: 
       - ./server/config.ini:/config.ini:ro
   
-
   client1:
     container_name: client1
     image: client:latest
