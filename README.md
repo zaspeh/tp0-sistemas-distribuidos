@@ -7,13 +7,11 @@ A continuación se describe cómo ejecutar (o lo que se realizó en) cada uno de
 
 ### Ejercicio N°1:
 
-Ejecutando el comando `bash ./generar-compose.sh docker-compose-dev.yaml 5` en la raíz del proyecto se ejecuta un script que recibe como parámetros el nombre del archivo de salida y la cantidad de clientes esperados.
-
-Este script permite configurar dinámicamente la cantidad de clientes que se desean levantar al ejecutar el sistema, ya que genera/modifica el archivo `docker-compose-dev.yaml`, el cual contiene la configuración utilizada por Docker Compose para inicializar los contenedores.
+Ejecutando el comando `bash ./generar-compose.sh <nombre-archivo-de-salida> <cantidad-clientes>` en la raíz del proyecto se ejecuta un script el cual permite configurar dinámicamente la cantidad de clientes que se desean levantar al ejecutar el sistema, ya que genera/modifica el archivo `docker-compose-dev.yaml` (en caso de ser ese el archivo de salida indicado), el cual contiene la configuración utilizada por Docker Compose para inicializar los contenedores.
 
 ### Ejercicio N°2:
 
-En este ejercicio se añadieron `volumes` en el archivo de configuración `docker-compose-dev.yaml` con el objetivo de poder modificar la configuración del cliente y del servidor sin necesidad de reconstruir las imágenes de Docker cada vez que se realizan cambios en los archivos de configuración.
+En este ejercicio se añadieron `volumes` en el archivo de configuración generado al ejecutar el comando del ejercicio1 con el objetivo de poder modificar la configuración del cliente y del servidor sin necesidad de reconstruir las imágenes de Docker cada vez que se realizan cambios en los archivos de configuración.
 
 ### Ejercicio N°3:
 
