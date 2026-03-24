@@ -57,21 +57,19 @@ class Server:
         If a problem arises in the communication with the client, the
         client socket will also be closed
         """
-        try:
-            while True:
+        while True: # termino cuando me pregunta los ganadores
+            try:
                 body, msg_type = recv_raw(client_sock)
                 msg = build_message(body, msg_type)
 
                 should_break = msg.handle(self, client_sock)
 
-                if should_break:
+                if should_break == True:
                     break
 
-        except ConnectionError:
-            pass
-
-        finally:
-            client_sock.close()
+            except ConnectionError:
+                client_sock.close()
+                break # si el cliente se desconecta... entonces me voy
 
         
     def __accept_new_connection(self):
@@ -129,3 +127,4 @@ class Server:
         ]
 
         send_winners(client_sock, winners)
+        client_sock.close()

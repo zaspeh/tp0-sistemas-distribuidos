@@ -30,7 +30,9 @@ class BatchMessage(Message):
             )
 
             send_error(client_sock)
+            client_sock.close() 
             return True
+
 
 class NotifyDoneMessage(Message):
     def handle(self, server, client_sock):
