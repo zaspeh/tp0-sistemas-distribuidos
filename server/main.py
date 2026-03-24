@@ -12,7 +12,6 @@ def handle_sigterm(server):
 
     server.close()
     
-    sys.exit(0)
 
 
 def initialize_config():
