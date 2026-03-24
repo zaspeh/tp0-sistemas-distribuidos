@@ -21,6 +21,9 @@ class Server:
         self.client_lock = threading.Lock()
         self.file_lock = threading.Lock()
         self.condition = threading.Condition(self.lock)
+        self.threads = []
+        self.active_sockets = []
+        self.sockets_lock = threading.Lock()
 
     def close(self):
         self._running = False  
@@ -33,6 +36,18 @@ class Server:
                 logging.error(f"action: close_server_socket | result: fail | error: {e}")
             finally:
                 self._server_socket = None
+        
+        with self.sockets_lock:
+            for sock in self.active_sockets:
+                try:
+                    sock.shutdown(socket.SHUT_RDWR)
+                    sock.close()
+                except:
+                    pass
+            self.active_sockets.clear()
+
+        for t in self.threads:
+            t.join()
 
     def run(self):
         """
@@ -46,11 +61,15 @@ class Server:
             try:
                 client_sock = self.__accept_new_connection()
 
+                with self.sockets_lock:
+                    self.active_sockets.append(client_sock)
+
                 t = threading.Thread(
                     target=self.__handle_client_connection,
-                    args=(client_sock,),
-                    daemon=True
+                    args=(client_sock,)
                 )
+                self.threads.append(t)
+
                 t.start()
 
             except OSError:
@@ -80,6 +99,8 @@ class Server:
 
         finally:
             client_sock.close()
+            with self.sockets_lock:
+                self.active_sockets.remove(client_sock)
         
     def __accept_new_connection(self):
         """
