@@ -89,5 +89,15 @@ Se utilizan dos herramientas principales:
 * Lock: para proteger secciones críticas (por ejemplo cuando se hace `store_bets(..)`).
 * Condition: para coordinar eventos entre threads (por ejemplo para coordinar el momento en el que se realiza el sorteo).
 
-A su vez se separaron dos locks dependiendo de su uso, por un lado `file_lock` el cual se encarga de cubrir los registros de las apuestas y por el otro `lock` el cual era usado por la `Condition` mencionada previamente.
-Esta `Condition` también se utilizó al momento de consultar los ganadores del sorteo, de forma tal que se prevenga el spurious wakeups.  
+A su vez, se separaron distintos locks según su responsabilidad:
+
+`file_lock`: protege la persistencia de apuestas (`store_bets(...)`).
+`client_lock`: protege el acceso al mapeo de clientes y agencias.
+`lock`: utilizado por la Condition para coordinar el sorteo.
+
+Adicionalmente, se implementa un mecanismo de shutdown controlado del servidor. Para ello:
+
+Se mantiene una colección de sockets activos (active_sockets) protegida por un lock.
+Al cerrar el servidor, se cierra primero el socket de escucha para interrumpir el accept().
+Luego se cierran los sockets activos utilizando shutdown() para desbloquear posibles recv() en los threads (evitando que el thread quede bloqueado).
+Finalmente, se realiza join() sobre los threads para asegurar la correcta liberación de recursos.
