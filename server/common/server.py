@@ -18,6 +18,7 @@ class Server:
         self.total_clients = total_clients
         self.sorteo_done = False
         self.lock = threading.Lock()
+        self.client_lock = threading.Lock()
         self.file_lock = threading.Lock()
         self.condition = threading.Condition(self.lock)
 
@@ -125,7 +126,8 @@ class Server:
         return True
 
     def _send_winners(self, client_sock):
-        agency = self.client_agency[client_sock]
+        with self.client_lock:
+            agency = self.client_agency.get(client_sock)
 
         winners = self.winners_by_agency.get(agency, [])
 

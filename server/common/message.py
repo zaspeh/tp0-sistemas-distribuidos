@@ -11,7 +11,8 @@ class BatchMessage(Message):
         self.bets = parse_batch(body)
 
     def handle(self, server, client_sock):
-        server.client_agency[client_sock] = self.bets[0].agency
+        with server.client_lock:
+            server.client_agency[client_sock] = self.bets[0].agency
         cantidad = len(self.bets)
 
         try:
